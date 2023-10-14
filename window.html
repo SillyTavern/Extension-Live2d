@@ -1,0 +1,55 @@
+<div id="live2d_settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>Live2D</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <div>
+                <label class="checkbox_label" for="live2d_enabled">
+                    <input type="checkbox" id="live2d_enabled" name="blip_enabled">
+                    <small>Enabled</small>
+                </label>
+                <label class="checkbox_label" for="live2d_follow_cursor">
+                    <input type="checkbox" id="live2d_follow_cursor" name="live2d_follow_cursor">
+                    <small>Follow cursor</small>
+                </label>
+                <label class="checkbox_label" for="live2d_show_hit_frames">
+                    <input type="checkbox" id="live2d_show_hit_frames" name="live2d_show_hit_frames">
+                    <small>Show hit frames</small>
+                </label>
+            </div><!--
+            <div>
+                <script src="scripts/extensions/third-party/Extension-live2d/live2dcubismcore.min.js"></script>
+                <script src="scripts/extensions/third-party/Extension-live2d/live2d.min.js"></script>
+                <script src="scripts/extensions/third-party/Extension-live2d/pixi.min.js"></script>
+                <script src="scripts/extensions/third-party/Extension-live2d/index.min.js"></script>
+
+                <script>
+                    const cubism2Model =
+                    "https://cdn.jsdelivr.net/gh/Eikanya/Live2d-model/Live2D/Senko_Normals/senko.model3.json";
+
+                    var canvas = document.createElement('canvas');
+                    canvas.id = "live2d-canvas";
+                    document.getElementById("expression-wrapper").appendChild(canvas);
+
+                    (async function main() {
+                    const app = new PIXI.Application({
+                        view: document.getElementById("live2d-canvas"),
+                        autoStart: true,
+                        resizeTo: window,
+                        backgroundColor: 0x333333,
+                    });
+
+                    const model2 = await PIXI.live2d.Live2DModel.from(cubism2Model);
+
+                    app.stage.addChild(model2);
+
+                    model2.scale.set(0.3);
+                    })();
+
+                </script>
+            </div>-->
+        </div>
+    </div>
+</div>
