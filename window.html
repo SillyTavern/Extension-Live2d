@@ -6,6 +6,9 @@
         </div>
         <div class="inline-drawer-content">
             <div>
+                <div>
+                    <h4>Global Settings</h4>
+                </div>
                 <label class="checkbox_label" for="live2d_enabled">
                     <input type="checkbox" id="live2d_enabled" name="blip_enabled">
                     <small>Enabled</small>
@@ -14,9 +17,29 @@
                     <input type="checkbox" id="live2d_follow_cursor" name="live2d_follow_cursor">
                     <small>Follow cursor</small>
                 </label>
-                <label class="checkbox_label" for="live2d_show_hit_frames">
-                    <input type="checkbox" id="live2d_show_hit_frames" name="live2d_show_hit_frames">
-                    <small>Show hit frames</small>
+                <div>
+                    <h4>Model Settings</h4>
+                </div>
+                <div class="live2d-parameter">
+                    <div class="live2d-parameter-title">
+                        <label for="live2d_model_scale">
+                            Model scale <br/>(<span id="live2d_model_scale_value"></span>x)
+                        </label>
+                    </div>
+                    <div class="blip-slider-div">
+                        <input id="live2d_model_scale" type="range" min="0.1" max="2" step="0.1" value="1.0" />
+                        <small>
+                            Scale of the live2d model.
+                        </small>
+                    </div>
+                </div>
+                <label class="checkbox_label" for="live2d_auto_send_interaction">
+                    <input type="checkbox" id="live2d_auto_send_interaction" name="live2d_auto_send_interaction">
+                    <small>Auto-send interaction</small>
+                </label>
+                <label class="checkbox_label" for="live2d_show_frames">
+                    <input type="checkbox" id="live2d_show_frames" name="live2d_show_frames">
+                    <small>Show model frames (debug)</small>
                 </label>
             </div><!--
             <div>
