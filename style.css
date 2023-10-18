@@ -1,3 +1,57 @@
 #live2d-canvas{
     background:transparent;
 }
+
+.live2d-character-select-div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 1em;
+}
+
+#live2d_character_select {
+    margin-bottom: 0;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+.live2d-parameter {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #2a2a2a;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+}
+
+.live2d-parameter-title {
+    width: 40%;
+    box-sizing: border-box;
+    padding: 1em;
+    margin: 0;
+    margin-right: 0px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+}
+
+.live2d-model-select-div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 1em;
+}
+
+#live2d_model_div {
+    display: none;
+}
+
+#live2d_model_select {
+    margin-bottom: 0;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+#live2d_model_settings {
+    display: none;
+}

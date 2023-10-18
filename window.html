@@ -7,72 +7,100 @@
         <div class="inline-drawer-content">
             <div>
                 <div>
-                    <h4>Global Settings</h4>
+                    <div>
+                        <h4>Global Settings</h4>
+                    </div>
+                    <label class="checkbox_label" for="live2d_enabled">
+                        <input type="checkbox" id="live2d_enabled" name="live2d_enabled">
+                        <small>Enabled</small>
+                    </label>
+                    <label class="checkbox_label" for="live2d_follow_cursor">
+                        <input type="checkbox" id="live2d_follow_cursor" name="live2d_follow_cursor">
+                        <small>Follow cursor</small>
+                    </label>
+                    <label class="checkbox_label" for="live2d_auto_send_interaction">
+                        <input type="checkbox" id="live2d_auto_send_interaction" name="live2d_auto_send_interaction">
+                        <small>Auto-send interaction</small>
+                    </label>
+                    <label class="checkbox_label" for="live2d_show_frames">
+                        <input type="checkbox" id="live2d_show_frames" name="live2d_show_frames">
+                        <small>Show model frames (debug)</small>
+                    </label>
+                    <div>
+                        <h4>Model Mapping</h4>
+                    </div>
                 </div>
-                <label class="checkbox_label" for="live2d_enabled">
-                    <input type="checkbox" id="live2d_enabled" name="blip_enabled">
-                    <small>Enabled</small>
-                </label>
-                <label class="checkbox_label" for="live2d_follow_cursor">
-                    <input type="checkbox" id="live2d_follow_cursor" name="live2d_follow_cursor">
-                    <small>Follow cursor</small>
-                </label>
                 <div>
-                    <h4>Model Settings</h4>
-                </div>
-                <div class="live2d-parameter">
-                    <div class="live2d-parameter-title">
-                        <label for="live2d_model_scale">
-                            Model scale <br/>(<span id="live2d_model_scale_value"></span>x)
-                        </label>
+                    <div class="live2d-parameter">
+                        <div class="live2d-parameter-title">
+                            <label for="live2d_character_select">Character:</label>
+                        </div>
+                        <div>
+                            <div class="live2d-character-select-div">
+                                <div id="live2d_character_refresh_button" class="menu_button">
+                                    <i class="fa-solid fa-refresh"></i>
+                                    <!-- Refresh -->
+                                </div>
+                                <select id="live2d_character_select">
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="checkbox_label" for="live2d_show_all_characters">
+                                    <input type="checkbox" id="live2d_show_all_characters" name="live2d_show_all_characters">
+                                    <small>Show all characters.</small>
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="blip-slider-div">
-                        <input id="live2d_model_scale" type="range" min="0.1" max="2" step="0.1" value="1.0" />
-                        <small>
-                            Scale of the live2d model.
-                        </small>
+                    <div id="live2d_model_div" class="live2d-parameter">
+                        <div class="live2d-parameter-title">
+                            <label for="live2d_model_select">Live2d Model:</label>
+                        </div>
+                        <div>
+                            <div class="live2d-model-select-div">
+                                <div id="live2d_model_refresh_button" class="menu_button">
+                                    <i class="fa-solid fa-refresh"></i>
+                                    <!-- Refresh -->
+                                </div>
+                                <select id="live2d_model_select">
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <label class="checkbox_label" for="live2d_auto_send_interaction">
-                    <input type="checkbox" id="live2d_auto_send_interaction" name="live2d_auto_send_interaction">
-                    <small>Auto-send interaction</small>
-                </label>
-                <label class="checkbox_label" for="live2d_show_frames">
-                    <input type="checkbox" id="live2d_show_frames" name="live2d_show_frames">
-                    <small>Show model frames (debug)</small>
-                </label>
-            </div><!--
-            <div>
-                <script src="scripts/extensions/third-party/Extension-live2d/live2dcubismcore.min.js"></script>
-                <script src="scripts/extensions/third-party/Extension-live2d/live2d.min.js"></script>
-                <script src="scripts/extensions/third-party/Extension-live2d/pixi.min.js"></script>
-                <script src="scripts/extensions/third-party/Extension-live2d/index.min.js"></script>
-
-                <script>
-                    const cubism2Model =
-                    "https://cdn.jsdelivr.net/gh/Eikanya/Live2d-model/Live2D/Senko_Normals/senko.model3.json";
-
-                    var canvas = document.createElement('canvas');
-                    canvas.id = "live2d-canvas";
-                    document.getElementById("expression-wrapper").appendChild(canvas);
-
-                    (async function main() {
-                    const app = new PIXI.Application({
-                        view: document.getElementById("live2d-canvas"),
-                        autoStart: true,
-                        resizeTo: window,
-                        backgroundColor: 0x333333,
-                    });
-
-                    const model2 = await PIXI.live2d.Live2DModel.from(cubism2Model);
-
-                    app.stage.addChild(model2);
-
-                    model2.scale.set(0.3);
-                    })();
-
-                </script>
-            </div>-->
+                <div id="live2d_model_settings">
+                    <div>
+                        <h4>Model Settings</h4>
+                    </div>
+                    <div class="live2d-parameter">
+                        <div class="live2d-parameter-title">
+                            <label for="live2d_model_scale">
+                                Model scale <br/>(<span id="live2d_model_scale_value"></span>x)
+                            </label>
+                        </div>
+                        <div class="live2d-slider-div">
+                            <input id="live2d_model_scale" type="range" min="0.1" max="2" step="0.1" value="1.0" />
+                            <small>
+                                Scale of the live2d model.
+                            </small>
+                        </div>
+                    </div>
+                    <div>
+                        <h4>Expressions mapping</h4>
+                    </div>
+                    <div id="live2d_expression_mapping">
+                        
+                    </div>
+                    <div>
+                        <h4>Hit frames mapping</h4>
+                    </div>
+                    <div id="live2d_hit_frame_mapping">
+                        
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -8,20 +8,23 @@ TODO:
   - Load character model from character folder OK
   - Update character model when chat change OK
   - Resize model option OK
+  - Plug to expression OK
   - Automatically load hit frames and animation list
   - UI for user to connect hit frames with animation
-  - Plug to expression
   - Play mouth animation when talking (message length dependant)
   - model setting per character
   - Group chat mode
   - Allow multiple models for one character / ability to switch / force animation
   - UI mapping ST expression to live2d expression+motion
   - activate/disable hitframes message + auto-send
+  - option to delete a model mapping
+  - option to test expression/animation
+  - option to detach live2d ui
 */
 
-import { loadFileToDocument } from "../../../utils.js";
+import { loadFileToDocument, trimToEndSentence, trimToStartSentence } from "../../../utils.js";
 import { saveSettingsDebounced, getRequestHeaders, eventSource, event_types, sendMessageAsUser } from "../../../../script.js";
-import { getContext, extension_settings, ModuleWorkerWrapper } from "../../../extensions.js";
+import { getContext, extension_settings, ModuleWorkerWrapper, getApiUrl, doExtrasFetch, modules } from "../../../extensions.js";
 export { MODULE_NAME };
 
 const extensionFolderPath = `scripts/extensions/third-party/Extension-Live2d`;
@@ -47,10 +50,43 @@ for(const i of JS_LIBS){
   );
 }
 
+const FALLBACK_EXPRESSION = "joy"
+const CLASSIFY_EXPRESSIONS = [
+  "admiration",
+  "amusement",
+  "anger",
+  "annoyance",
+  "approval",
+  "caring",
+  "confusion",
+  "curiosity",
+  "desire",
+  "disappointment",
+  "disapproval",
+  "disgust",
+  "embarrassment",
+  "excitement",
+  "fear",
+  "gratitude",
+  "grief",
+  "joy",
+  "love",
+  "nervousness",
+  "optimism",
+  "pride",
+  "realization",
+  "relief",
+  "remorse",
+  "sadness",
+  "surprise",
+  "neutral"
+];
+
 const live2d = PIXI.live2d;
 
-let characters_model_path = {}
-let models = [];
+let characters_list = []
+let characters_models = {}
+let models = {};
 let app = null;
 
 //#############################//s
@@ -68,6 +104,10 @@ const defaultSettings = {
 
     // Debug
     showFrames: false,
+
+    // Character model mapping
+    characterModelMapping: {},
+    characterModelsSettings: {},
 }
 
 function loadSettings() {
@@ -92,6 +132,8 @@ function loadSettings() {
 async function onEnabledClick() {
     extension_settings.live2d.enabled = $('#live2d_enabled').is(':checked');
     saveSettingsDebounced();
+
+    loadLive2d();
 }
 
 async function onFollowCursorClick() {
@@ -130,6 +172,220 @@ async function onHitAreasClick(hitAreas) {
   //getContext().generate();
 }
 
+async function onCharacterChange() {
+  const character = $("#live2d_character_select").val();
+
+  $("#live2d_model_div").hide();
+  $("#live2d_model_settings").hide();
+
+  if (character == "none") {
+      return;
+  }
+
+  $('#live2d_model_select')
+          .find('option')
+          .remove()
+          .end()
+          .append('<option value="none">None</option>')
+          .val('none')
+
+      for (const i of characters_models[character]) {
+          const model_folder = i[0];
+          const model_settings_path = i[1];
+          $("#live2d_model_select").append(new Option(model_folder, model_settings_path));
+      }
+
+  if (extension_settings.live2d.characterModelMapping[character] !== undefined) {
+    $("#live2d_model_select").val(extension_settings.live2d.characterModelMapping[character]);
+    $("#live2d_model_settings").show();
+    loadModelUi();
+  }
+
+  $("#live2d_model_div").show();
+
+  //const characterModels = extension_settings.live2d.characterModels[character];
+
+  /*
+
+  const character_settings = extension_settings.live2d.characterModels[character]
+  
+  $('#live2d_text_speed').val(character_settings.textSpeed);
+  $('#live2d_text_speed_value').text(character_settings.textSpeed);
+
+  $('#live2d_min_speed_multiplier').val(character_settings.minSpeedMultiplier);
+  $('#live2d_min_speed_multiplier_value').text(character_settings.minSpeedMultiplier);
+
+  $('#live2d_max_speed_multiplier').val(character_settings.maxSpeedMultiplier);
+  $('#live2d_max_speed_multiplier_value').text(character_settings.maxSpeedMultiplier);
+
+  $('#live2d_comma_delay').val(character_settings.commaDelay);
+  $('#live2d_comma_delay_value').text(character_settings.commaDelay);
+
+  $('#live2d_phrase_delay').val(character_settings.phraseDelay);
+  $('#live2d_phrase_delay_value').text(character_settings.phraseDelay);
+
+  $('#live2d_audio_volume_multiplier').val(character_settings.audioVolume);
+  $('#live2d_audio_volume_multiplier_value').text(character_settings.audioVolume);
+
+  $('#live2d_audio_speed').val(character_settings.audioSpeed);
+  $('#live2d_audio_speed_value').text(character_settings.audioSpeed);
+
+  if (character_settings.audioOrigin == "file") {
+      $("#live2d_audio_origin").val("file");
+      $("#live2d_file_settings").show();
+      $("#live2d_generated_settings").hide();
+
+      $("#live2d_file_asset_select").val(character_settings.audioSettings.asset);
+
+      $('#live2d_audio_min_pitch').val(character_settings.audioSettings.minPitch);
+      $('#live2d_audio_min_pitch_value').text(character_settings.audioSettings.minPitch);
+      $('#live2d_audio_max_pitch').val(character_settings.audioSettings.maxPitch);
+      $('#live2d_audio_max_pitch_value').text(character_settings.audioSettings.maxPitch);
+      $("#live2d_audio_play_full").prop('checked', character_settings.audioSettings.wait);
+  }
+
+  if (character_settings.audioOrigin == "generated") {
+      $("#live2d_audio_origin").val("generated");
+      $("#live2d_file_settings").hide();
+      $("#live2d_generated_settings").show();
+
+      $('#live2d_generated_min_frequency').val(character_settings.audioSettings.minFrequency);
+      $('#live2d_generated_min_frequency_value').text(character_settings.audioSettings.minFrequency);
+      $('#live2d_generated_max_frequency').val(character_settings.audioSettings.maxFrequency);
+      $('#live2d_generated_max_frequency_value').text(character_settings.audioSettings.maxFrequency);
+  }
+  */
+}
+
+async function onCharacterRefreshClick() {
+  updateCharactersList();
+  $("#live2d_character_select").val("none");
+}
+
+async function onShowAllCharactersClick() {
+  extension_settings.live2d.showAllCharacters = $('#live2d_show_all_characters').is(':checked');
+  saveSettingsDebounced();
+  updateCharactersList();
+}
+
+async function loadModelUi() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  const expression_ui = $("#live2d_expression_mapping");
+  const hit_frame_ui = $("#live2d_hit_frame_mapping");
+  const model = await live2d.Live2DModel.from(model_path);
+
+  expression_ui.empty();
+  hit_frame_ui.empty();
+
+  console.debug(DEBUG_PREFIX, "loading settings of model:",model);
+
+  const model_expressions = model.internalModel.settings.expressions;
+  const model_motions = model.internalModel.settings.motions;
+
+  console.debug(DEBUG_PREFIX, "expressions:",model_expressions);
+  console.debug(DEBUG_PREFIX, "motions:",model_motions);
+
+  // Initialize new model
+  if (extension_settings.live2d.characterModelsSettings[character] === undefined)
+    extension_settings.live2d.characterModelsSettings[character] = {};
+
+  if (extension_settings.live2d.characterModelsSettings[character][model_path] === undefined)
+    extension_settings.live2d.characterModelsSettings[character][model_path] = {};
+
+  if (extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"] === undefined) {
+    extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"] = {};
+    for (const expression of CLASSIFY_EXPRESSIONS) {
+      extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression] = {'expression': 'none', 'motion': 'none'};
+    }
+    saveSettingsDebounced();
+  }
+
+  for (const expression of CLASSIFY_EXPRESSIONS) {
+    expression_ui.append(`
+    <div class="live2d-parameter">
+        <div class="live2d-parameter-title">
+            <label for="live2d_expression_${expression}">
+              ${expression}
+            </label>
+        </div>
+        <div class="live2d_expression_select_div" class="live2d-select-div">
+        <select id="live2d_expression_select_${expression}">
+        </select>
+        <select id="live2d_motion_select_${expression}">
+        </select>
+        </div>
+    </div>
+    `)
+    
+    $(`#live2d_expression_select_${expression}`)
+      .append('<option value="none">Select expression</option>');
+  
+    for (const i of model_expressions) {
+      $(`#live2d_expression_select_${expression}`).append(new Option(i.name, i.name));
+    }
+
+    $(`#live2d_expression_select_${expression}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["expression"])
+
+    $(`#live2d_motion_select_${expression}`)
+      .append('<option value="none">Select motion</option>');
+  
+    for (const motion in model_motions) {
+      $(`#live2d_motion_select_${expression}`).append(new Option(motion+" random", motion+"_id=random"));
+      for (const motion_id in model_motions[motion]) {
+        $(`#live2d_motion_select_${expression}`).append(new Option(motion+" "+motion_id, motion+"_id="+motion_id));
+      }
+    }
+
+    $(`#live2d_motion_select_${expression}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["motion"])
+
+    $(`#live2d_expression_select_${expression}`).on("change", function() {updateExpressionMapping(expression)});
+    $(`#live2d_motion_select_${expression}`).on("change", function() {updateExpressionMapping(expression)});
+  }
+
+
+  // load model settings
+  const model_expression_mapping_dom = $("#live2d_expression_mapping");
+
+  //for (const i in model.internalModel.)
+
+  // Load mapped settings
+
+
+  $("#live2d_model_settings").show();
+}
+
+async function updateExpressionMapping(expression) {
+  const character = $("#live2d_character_select").val();
+  const model = $("#live2d_model_select").val();
+  const model_expression = $(`#live2d_expression_select_${expression}`).val();
+  const model_motion = $(`#live2d_motion_select_${expression}`).val();
+
+  extension_settings.live2d.characterModelsSettings[character][model]["expressions"][expression] = {"expression": model_expression, "motion": model_motion};
+  saveSettingsDebounced();
+
+  console.debug(DEBUG_PREFIX,"Updated:",expression,extension_settings.live2d.characterModelsSettings[character][model]["expressions"][expression]);
+}
+
+async function onModelChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+
+  if (model_path == "none") {
+    $("#live2d_model_settings").hide();
+    delete extension_settings.live2d.characterModelMapping[character];
+    saveSettingsDebounced();
+    loadLive2d();
+    return;
+  }
+
+  extension_settings.live2d.characterModelMapping[character] = model_path;
+  saveSettingsDebounced();
+
+  loadLive2d();
+  loadModelUi();
+}
+
 //#############################//
 //  Methods                    //
 //#############################//
@@ -166,20 +422,25 @@ function showFrames(model) {
 }
 
 async function loadLive2d() {
-  if(app !== null)
+  if(app !== null) {
     app.destroy();
+    app = null;
+  }
 
   document.getElementById("live2d-canvas").hidden = true;
 
+  if (!extension_settings.live2d.enabled)
+    return;
+
   const character = getContext().name2;
 
-  if (characters_model_path[character] == undefined)
+  if (extension_settings.live2d.characterModelMapping[character] == undefined)
     return;
 
   document.getElementById("live2d-canvas").hidden = false;
 
-  let model = await live2d.Live2DModel.from(characters_model_path[character]);// TODO: multiple models
-  models = [model];
+  let model = await live2d.Live2DModel.from(extension_settings.live2d.characterModelMapping[character]);// TODO: multiple models
+  models[character] = model;
 
   app = new PIXI.Application({
     view: document.getElementById("live2d-canvas"),
@@ -207,7 +468,7 @@ async function loadLive2d() {
     showFrames(model);
 
   // DBG
-  model.on("click", () => {model.expression();model.internalModel.motionManager.stopAllMotions(); model.motion("")}); // check stop motion
+  //model.on("click", () => {model.expression();model.internalModel.motionManager.stopAllMotions(); model.motion("")}); // check stop motion
 
   // handle tapping
   model.on("hit", (hitAreas) => onHitAreasClick(hitAreas));
@@ -238,7 +499,6 @@ async function loadLive2d() {
 
   // Set cursor behavior
   model._autoInteract = extension_settings.live2d.followCursor;
-  model.children[0].visible = extension_settings.live2d.showHitFrames;
 
   console.debug(DEBUG_PREFIX,model);
   
@@ -246,21 +506,80 @@ async function loadLive2d() {
 
 async function updateCharactersModels() {
   const character = getContext().name2; // TODO group chat
-  if (characters_model_path[character] === undefined){
-    const files = await getCharacterLive2dFiles(character);
-
-    for(const i of files){
-      console.debug(DEBUG_PREFIX,"file found:",i);
-      if (i.includes("model")) {
-        console.debug(DEBUG_PREFIX,"Model settings file found:",i);
-        characters_model_path[character] = i;
-        break;
-      }
-    }
-
-    console.debug(DEBUG_PREFIX,"Updated models path to:",characters_model_path)
+  if (characters_models[character] === undefined){
+    characters_models[character] = await getCharacterLive2dFiles(character);
+    console.debug(DEBUG_PREFIX,"Updated models to:",characters_models)
   }
   await loadLive2d();
+}
+
+function updateCharactersList() {
+  let current_characters = new Set();
+  const context = getContext();
+  for (const i of context.characters) {
+      current_characters.add(i.name);
+  }
+
+  current_characters = Array.from(current_characters);
+
+  console.debug(DEBUG_PREFIX,context)
+
+  if (current_characters.length == 0)
+      return;
+
+  if (!extension_settings.live2d.showAllCharacters) {
+      let chat_members = [];
+
+      // group mode
+      if (context.name2 == "") {
+          for(const i of context.groups) {
+              if (i.id == context.groupId) {
+                  for(const j of i.members) {
+                      let char_name = j.replace(/\.[^/.]+$/, "")
+                      if (char_name.includes("default_"))
+                          char_name = char_name.substring("default_".length);
+                      
+                      chat_members.push(char_name);
+                      console.debug(DEBUG_PREFIX,"New group member:",j.replace(/\.[^/.]+$/, ""))
+                  }
+              }
+          }
+      }
+      else
+          chat_members = [context.name2];
+      
+      chat_members.sort();
+
+      console.debug(DEBUG_PREFIX,"Chat members",chat_members)
+
+      // Sort group character on top
+      for (const i of chat_members) {
+          let index = current_characters.indexOf(i);
+          if (index != -1) {
+              console.debug(DEBUG_PREFIX,"Moving to top",i)
+              current_characters.splice(index, 1);
+          }
+      }
+      
+      current_characters = chat_members;
+  }
+
+  if (JSON.stringify(characters_list) !== JSON.stringify(current_characters)) {
+      characters_list = current_characters
+
+      $('#live2d_character_select')
+          .find('option')
+          .remove()
+          .end()
+          .append('<option value="none">Select Character</option>')
+          .val('none')
+
+      for (const charName of characters_list) {
+          $("#live2d_character_select").append(new Option(charName, charName));
+      }
+
+      console.debug(DEBUG_PREFIX, "Updated character list to:", characters_list);
+  }
 }
 
 //#############################//
@@ -312,6 +631,13 @@ jQuery(async () => {
     $("#live2d_enabled").on("click", onEnabledClick);
     $("#live2d_follow_cursor").on("click", onFollowCursorClick);
 
+    $("#live2d_character_select").on("change", onCharacterChange);
+    $("#live2d_character_refresh_button").on("click", onCharacterRefreshClick);
+    $("#live2d_show_all_characters").on("click", onShowAllCharactersClick);
+
+    
+    $("#live2d_model_select").on("change", onModelChange);
+
     $("#live2d_model_scale").on("input", onModelScaleChange);
 
     $("#live2d_show_frames").on("click", onShowFramesClick);
@@ -323,6 +649,10 @@ jQuery(async () => {
 
     // Events
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersModels);
+    eventSource.on(event_types.CHAT_CHANGED, updateCharactersList);
+    eventSource.on(event_types.GROUP_UPDATED, updateCharactersList);
+
+    eventSource.on(event_types.MESSAGE_RECEIVED, (chat_id) => updateExpression(chat_id));
 
     // DBG Tests
 
@@ -330,6 +660,140 @@ jQuery(async () => {
     canvas.id = "live2d-canvas";
     document.getElementById("expression-wrapper").appendChild(canvas);
 
+    updateCharactersListOnce();
+
     //await loadLive2d();
     console.debug(DEBUG_PREFIX,"Finish loaded.");
 });
+
+const delay = s => new Promise(res => setTimeout(res, s*1000));
+
+async function updateCharactersListOnce() {
+  console.debug(DEBUG_PREFIX,"UDPATING char list", characters_list)
+  while (characters_list.length == 0) {
+      console.debug(DEBUG_PREFIX,"UDPATING char list")
+      updateCharactersList();
+      await delay(1);
+  }
+}
+
+// DBG
+//-------------------
+
+async function updateExpression(chat_id) {
+  const message = getContext().chat[chat_id];
+  const character = message.name;
+  const model_path = extension_settings.live2d.characterModelMapping[character];
+
+  console.debug(DEBUG_PREFIX,"received new message :", message);
+
+  if (message.is_user)
+    return;
+
+  if (model_path === undefined) {
+    console.debug(DEBUG_PREFIX, "No model assigned to", character);
+    return;
+  }
+
+  const expression = await getExpressionLabel(message.mes);
+  const model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["expression"];
+  const model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["motion"];
+
+  console.debug(DEBUG_PREFIX,"Playing expression",expression,":", model_expression, model_motion);
+  console.debug(DEBUG_PREFIX,models)
+  console.debug(DEBUG_PREFIX,models[character]);
+
+  if (model_expression != "none") {
+    models[character].expression(model_expression);
+  }
+  // TODO fallback
+
+  if (model_motion != "none") {
+    const motion_label_split = model_motion.split("_id=")
+    const motion_label = motion_label_split[0];
+    const motion_id = motion_label_split[1];
+    
+    //models[character].internalModel.motionManager.stopAllMotions();
+
+    console.debug(DEBUG_PREFIX,motion_label,motion_id);
+
+    if (motion_id == "random")
+      models[character].motion(motion_label);
+    else
+      models[character].motion(motion_label,motion_id);
+  }
+}
+
+async function getExpressionLabel(text) {
+  // Return if text is undefined, saving a costly fetch request
+  if ((!modules.includes('classify') && !extension_settings.expressions.local) || !text) {
+      return FALLBACK_EXPRESSION;
+  }
+
+  text = sampleClassifyText(text);
+
+  try {
+      if (extension_settings.expressions.local) {
+          // Local transformers pipeline
+          const apiResult = await fetch('/api/extra/classify', {
+              method: 'POST',
+              headers: getRequestHeaders(),
+              body: JSON.stringify({ text: text }),
+          });
+
+          if (apiResult.ok) {
+              const data = await apiResult.json();
+              return data.classification[0].label;
+          }
+      } else {
+          // Extras
+          const url = new URL(getApiUrl());
+          url.pathname = '/api/classify';
+
+          const apiResult = await doExtrasFetch(url, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Bypass-Tunnel-Reminder': 'bypass',
+              },
+              body: JSON.stringify({ text: text }),
+          });
+
+          if (apiResult.ok) {
+              const data = await apiResult.json();
+              return data.classification[0].label;
+          }
+      }
+  } catch (error) {
+      console.log(error);
+      return FALLBACK_EXPRESSION;
+  }
+}
+
+/**
+ * Processes the classification text to reduce the amount of text sent to the API.
+ * Quotes and asterisks are to be removed. If the text is less than 300 characters, it is returned as is.
+ * If the text is more than 300 characters, the first and last 150 characters are returned.
+ * The result is trimmed to the end of sentence.
+ * @param {string} text The text to process.
+ * @returns {string}
+ */
+function sampleClassifyText(text) {
+  if (!text) {
+      return text;
+  }
+
+  // Remove asterisks and quotes
+  let result = text.replace(/[\*\"]/g, '');
+
+  const SAMPLE_THRESHOLD = 300;
+  const HALF_SAMPLE_THRESHOLD = SAMPLE_THRESHOLD / 2;
+
+  if (text.length < SAMPLE_THRESHOLD) {
+      result = trimToEndSentence(result);
+  } else {
+      result = trimToEndSentence(result.slice(0, HALF_SAMPLE_THRESHOLD)) + ' ' + trimToStartSentence(result.slice(-HALF_SAMPLE_THRESHOLD));
+  }
+
+  return result.trim();
+}
