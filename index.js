@@ -196,12 +196,19 @@ async function onCharacterChange() {
 async function onCharacterRefreshClick() {
   updateCharactersList();
   $("#live2d_character_select").val("none");
+  $("#live2d_character_select").trigger("change");
 }
 
 async function onShowAllCharactersClick() {
   extension_settings.live2d.showAllCharacters = $('#live2d_show_all_characters').is(':checked');
   saveSettingsDebounced();
   updateCharactersList();
+}
+
+async function onModelRefreshClick() {
+  updateCharactersModels();
+  $("#live2d_model_select").val("none");
+  $("#live2d_model_select").trigger("change");
 }
 
 async function onModelChange() {
@@ -703,6 +710,8 @@ jQuery(async () => {
     $("#live2d_character_refresh_button").on("click", onCharacterRefreshClick);
     $("#live2d_show_all_characters").on("click", onShowAllCharactersClick);
 
+    
+    $("#live2d_model_refresh_button").on("click", onModelRefreshClick);
     
     $("#live2d_model_select").on("change", onModelChange);
 
