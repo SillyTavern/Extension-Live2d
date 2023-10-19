@@ -1,25 +1,28 @@
 /*
+DONE:
+- Features
+  - Background transparent
+  - Load character model from character folder
+  - Update character model when chat change
+  - Resize model option
+  - Plug classify expression to live2d expression/motion 
+  - model setting per character
+  - Allow multiple models for one character / ability to switch / force animation
+  - option to test expression/animation (use override menu)
+
 TODO:
 - Security
   - wait before sending interaction message if one is running
   - Resize model on resize window
 - Features
-  - Background transparent OK
-  - Load character model from character folder OK
-  - Update character model when chat change OK
-  - Resize model option OK
-  - Plug to expression OK
   - Automatically load hit frames and animation list
   - UI for user to connect hit frames with animation
   - Play mouth animation when talking (message length dependant)
-  - model setting per character
   - Group chat mode
-  - Allow multiple models for one character / ability to switch / force animation
-  - UI mapping ST expression to live2d expression+motion
   - activate/disable hitframes message + auto-send
   - option to delete a model mapping
-  - option to test expression/animation
   - option to detach live2d ui
+  - option to hide sprite
 */
 
 import { loadFileToDocument, trimToEndSentence, trimToStartSentence } from "../../../utils.js";
@@ -99,9 +102,6 @@ const defaultSettings = {
     followCursor: false,
     autoSendInteraction: false,
 
-    // Model settings
-    modelScale: 1.0,
-
     // Debug
     showFrames: false,
 
@@ -122,9 +122,6 @@ function loadSettings() {
     $("#live2d_enabled").prop('checked', extension_settings.live2d.enabled);
     $("#live2d_follow_cursor").prop('checked', extension_settings.live2d.followCursor);
     $("#live2d_auto_send_interaction").prop('checked', extension_settings.live2d.autoSendInteraction);
-
-    $("#live2d_model_scale").val(extension_settings.live2d.modelScale);
-    $("#live2d_model_scale_value").text(extension_settings.live2d.modelScale);
     
     $("#live2d_show_frames").prop('checked', extension_settings.live2d.showFrames);
 }
@@ -148,28 +145,19 @@ async function onAutoSendInteractionClick() {
   saveSettingsDebounced();
 }
 
-async function onModelScaleChange() {
-  extension_settings.live2d.modelScale = Number($('#live2d_model_scale').val());
-  $("#live2d_model_scale_value").text(extension_settings.live2d.modelScale);
-  saveSettingsDebounced();
-  loadLive2d();
-}
-
 async function onShowFramesClick() {
   extension_settings.live2d.showFrames = $('#live2d_show_frames').is(':checked');
   saveSettingsDebounced();
   loadLive2d();
 }
 
-
-async function onHitAreasClick(hitAreas) {
-  $('#send_textarea').val("") // clear message area to avoid double message
-  console.debug(DEBUG_PREFIX,"Detected click on hit areas:", hitAreas);
-
-  //sendMessageAsUser(text);
-  
-  // TODO: auto-send option
-  //getContext().generate();
+async function onModelScaleChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["scale"] = Number($('#live2d_model_scale').val());
+  $("#live2d_model_scale_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
+  saveSettingsDebounced();
+  loadLive2d();
 }
 
 async function onCharacterChange() {
@@ -268,6 +256,45 @@ async function onShowAllCharactersClick() {
   updateCharactersList();
 }
 
+async function onModelChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+
+  if (model_path == "none") {
+    $("#live2d_model_settings").hide();
+    delete extension_settings.live2d.characterModelMapping[character];
+    saveSettingsDebounced();
+    loadLive2d();
+    return;
+  }
+
+  extension_settings.live2d.characterModelMapping[character] = model_path;
+  saveSettingsDebounced();
+
+  loadLive2d();
+  loadModelUi();
+}
+
+async function onExpressionOverrideChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  const expression_override = $("#live2d_expression_select_override").val();
+
+  extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"] = expression_override;
+  saveSettingsDebounced();
+  loadLive2d();
+}
+
+async function onMotionOverrideChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  const motion_override = $("#live2d_motion_select_override").val();
+
+  extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"] = motion_override;
+  saveSettingsDebounced();
+  loadLive2d();
+}
+
 async function loadModelUi() {
   const character = $("#live2d_character_select").val();
   const model_path = $("#live2d_model_select").val();
@@ -290,17 +317,39 @@ async function loadModelUi() {
   if (extension_settings.live2d.characterModelsSettings[character] === undefined)
     extension_settings.live2d.characterModelsSettings[character] = {};
 
-  if (extension_settings.live2d.characterModelsSettings[character][model_path] === undefined)
-    extension_settings.live2d.characterModelsSettings[character][model_path] = {};
-
-  if (extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"] === undefined) {
+  if (extension_settings.live2d.characterModelsSettings[character][model_path] === undefined) {
+    const default_scale = 1.0
+    extension_settings.live2d.characterModelsSettings[character][model_path] = {"scale": default_scale, "override": {"expression": "none", "motion": "none"}};
     extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"] = {};
+
     for (const expression of CLASSIFY_EXPRESSIONS) {
       extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression] = {'expression': 'none', 'motion': 'none'};
     }
     saveSettingsDebounced();
   }
 
+  $("#live2d_model_scale").val(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
+  $("#live2d_model_scale_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
+
+  // Override expression/motion
+  $("#live2d_expression_select_override").append('<option value="none">Select expression</option>');
+  $("#live2d_motion_select_override").append('<option value="none">Select motion</option>');
+
+  $("#live2d_expression_select_override").on("change", onExpressionOverrideChange);
+  $("#live2d_motion_select_override").on("change", onMotionOverrideChange);
+
+  for (const i of model_expressions) {
+    $(`#live2d_expression_select_override`).append(new Option(i.name, i.name));
+  }
+
+  for (const motion in model_motions) {
+    $(`#live2d_motion_select_override`).append(new Option(motion+" random", motion+"_id=random"));
+    for (const motion_id in model_motions[motion]) {
+      $(`#live2d_motion_select_override`).append(new Option(motion+" "+motion_id, motion+"_id="+motion_id));
+    }
+  }
+
+  // Classify expressions mapping
   for (const expression of CLASSIFY_EXPRESSIONS) {
     expression_ui.append(`
     <div class="live2d-parameter">
@@ -318,8 +367,7 @@ async function loadModelUi() {
     </div>
     `)
     
-    $(`#live2d_expression_select_${expression}`)
-      .append('<option value="none">Select expression</option>');
+    $(`#live2d_expression_select_${expression}`).append('<option value="none">Select expression</option>');
   
     for (const i of model_expressions) {
       $(`#live2d_expression_select_${expression}`).append(new Option(i.name, i.name));
@@ -367,28 +415,20 @@ async function updateExpressionMapping(expression) {
   console.debug(DEBUG_PREFIX,"Updated:",expression,extension_settings.live2d.characterModelsSettings[character][model]["expressions"][expression]);
 }
 
-async function onModelChange() {
-  const character = $("#live2d_character_select").val();
-  const model_path = $("#live2d_model_select").val();
-
-  if (model_path == "none") {
-    $("#live2d_model_settings").hide();
-    delete extension_settings.live2d.characterModelMapping[character];
-    saveSettingsDebounced();
-    loadLive2d();
-    return;
-  }
-
-  extension_settings.live2d.characterModelMapping[character] = model_path;
-  saveSettingsDebounced();
-
-  loadLive2d();
-  loadModelUi();
-}
-
 //#############################//
 //  Methods                    //
 //#############################//
+
+
+async function onHitAreasClick(hitAreas) {
+  $('#send_textarea').val("") // clear message area to avoid double message
+  console.debug(DEBUG_PREFIX,"Detected click on hit areas:", hitAreas);
+
+  //sendMessageAsUser(text);
+  
+  // TODO: auto-send option
+  //getContext().generate();
+}
 
 function draggable(model) {
   model.buttonMode = true;
@@ -439,7 +479,13 @@ async function loadLive2d() {
 
   document.getElementById("live2d-canvas").hidden = false;
 
-  let model = await live2d.Live2DModel.from(extension_settings.live2d.characterModelMapping[character]);// TODO: multiple models
+  const model_path = extension_settings.live2d.characterModelMapping[character];
+  let model = await live2d.Live2DModel.from(model_path);// TODO: multiple models
+
+  // Need to free memory ?
+  if (models[character] !== undefined)
+    models[character].destroy(true, true, true);
+
   models[character] = model;
 
   app = new PIXI.Application({
@@ -453,10 +499,10 @@ async function loadLive2d() {
 
   console.debug(DEBUG_PREFIX,innerWidth, " ", innerHeight)
 
-  const scaleX = ((innerWidth) / model.width) * extension_settings.live2d.modelScale;
-  const scaleY = ((innerHeight) / model.height) * extension_settings.live2d.modelScale;
+  const scaleX = ((innerWidth) / model.width) * extension_settings.live2d.characterModelsSettings[character][model_path]["scale"];
+  const scaleY = ((innerHeight) / model.height) * extension_settings.live2d.characterModelsSettings[character][model_path]["scale"];
 
-  // fit the window
+  // Scale to canvas
   model.scale.set(Math.min(scaleX, scaleY));
 
   model.x = (innerWidth - model.width) / 2;
@@ -464,8 +510,34 @@ async function loadLive2d() {
 
   draggable(model);
 
+  // Debug frames
   if (extension_settings.live2d.showFrames)
     showFrames(model);
+
+  // Override expression/motion
+  const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"];
+  const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"];
+
+  if (override_expression != "none") {
+    model.expression(override_expression);
+    console.debug(DEBUG_PREFIX,"Playing override expression", override_expression);
+  }
+
+  if (override_motion != "none") {
+    console.debug(DEBUG_PREFIX,"Applying override motion")
+
+    const motion_label_split = override_motion.split("_id=")
+    const motion_label = motion_label_split[0];
+    const motion_id = motion_label_split[1];
+
+    if (motion_id == "random")
+      models[character].motion(motion_label);
+    else
+      models[character].motion(motion_label,motion_id);
+
+    
+    console.debug(DEBUG_PREFIX,"Playing override expression", override_motion);
+  }
 
   // DBG
   //model.on("click", () => {model.expression();model.internalModel.motionManager.stopAllMotions(); model.motion("")}); // check stop motion
@@ -684,6 +756,8 @@ async function updateExpression(chat_id) {
   const message = getContext().chat[chat_id];
   const character = message.name;
   const model_path = extension_settings.live2d.characterModelMapping[character];
+  const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"];
+  const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"]
 
   console.debug(DEBUG_PREFIX,"received new message :", message);
 
@@ -696,12 +770,22 @@ async function updateExpression(chat_id) {
   }
 
   const expression = await getExpressionLabel(message.mes);
-  const model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["expression"];
-  const model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["motion"];
+  let model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["expression"];
+  let model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["motion"];
+
+  if (override_expression != "none") {
+    console.debug(DEBUG_PREFIX,"Applying override expression")
+    model_expression = override_expression;
+  }
+
+  if (override_motion != "none") {
+    console.debug(DEBUG_PREFIX,"Applying override motion")
+    model_motion = override_motion;
+  }
 
   console.debug(DEBUG_PREFIX,"Playing expression",expression,":", model_expression, model_motion);
-  console.debug(DEBUG_PREFIX,models)
-  console.debug(DEBUG_PREFIX,models[character]);
+  //console.debug(DEBUG_PREFIX,models)
+  //console.debug(DEBUG_PREFIX,models[character]);
 
   if (model_expression != "none") {
     models[character].expression(model_expression);
