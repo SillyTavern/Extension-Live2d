@@ -90,7 +90,7 @@
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
                             <label for="live2d_expression_select_override">
-                                Override
+                                Override animation
                             </label>
                         </div>
                         <div class="live2d_expression_select_div" class="live2d-select-div">
@@ -98,10 +98,29 @@
                             </select>
                             <select id="live2d_motion_select_override">
                             </select>
+                            <small>
+                                Will play now and replace classified animation.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="live2d-parameter">
+                        <div class="live2d-parameter-title">
+                            <label for="live2d_expression_select_override">
+                                Default animation
+                            </label>
+                        </div>
+                        <div class="live2d_expression_select_div" class="live2d-select-div">
+                            <select id="live2d_expression_select_default">
+                            </select>
+                            <select id="live2d_motion_select_default">
+                            </select>
+                            <small>
+                                Played when classified expression has no mapping set.
+                            </small>
                         </div>
                     </div>
                     <div>
-                        <h4>Expressions mapping</h4>
+                        <h4>Classified expressions mapping</h4>
                     </div>
                     <div id="live2d_expression_mapping">
                         

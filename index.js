@@ -5,10 +5,12 @@ DONE:
   - Load character model from character folder
   - Update character model when chat change
   - Resize model option
-  - Plug classify expression to live2d expression/motion 
   - model setting per character
+  - UI to plug classify expression to live2d expression/motion
+  - Update animations when new message received base on classify and ui mapping
   - Allow multiple models for one character / ability to switch / force animation
   - option to test expression/animation (use override menu)
+  - add a default expression and fallback to it when mapping for classified expression is none
 
 TODO:
 - Security
@@ -53,7 +55,6 @@ for(const i of JS_LIBS){
   );
 }
 
-const FALLBACK_EXPRESSION = "joy"
 const CLASSIFY_EXPRESSIONS = [
   "admiration",
   "amusement",
@@ -190,59 +191,6 @@ async function onCharacterChange() {
   }
 
   $("#live2d_model_div").show();
-
-  //const characterModels = extension_settings.live2d.characterModels[character];
-
-  /*
-
-  const character_settings = extension_settings.live2d.characterModels[character]
-  
-  $('#live2d_text_speed').val(character_settings.textSpeed);
-  $('#live2d_text_speed_value').text(character_settings.textSpeed);
-
-  $('#live2d_min_speed_multiplier').val(character_settings.minSpeedMultiplier);
-  $('#live2d_min_speed_multiplier_value').text(character_settings.minSpeedMultiplier);
-
-  $('#live2d_max_speed_multiplier').val(character_settings.maxSpeedMultiplier);
-  $('#live2d_max_speed_multiplier_value').text(character_settings.maxSpeedMultiplier);
-
-  $('#live2d_comma_delay').val(character_settings.commaDelay);
-  $('#live2d_comma_delay_value').text(character_settings.commaDelay);
-
-  $('#live2d_phrase_delay').val(character_settings.phraseDelay);
-  $('#live2d_phrase_delay_value').text(character_settings.phraseDelay);
-
-  $('#live2d_audio_volume_multiplier').val(character_settings.audioVolume);
-  $('#live2d_audio_volume_multiplier_value').text(character_settings.audioVolume);
-
-  $('#live2d_audio_speed').val(character_settings.audioSpeed);
-  $('#live2d_audio_speed_value').text(character_settings.audioSpeed);
-
-  if (character_settings.audioOrigin == "file") {
-      $("#live2d_audio_origin").val("file");
-      $("#live2d_file_settings").show();
-      $("#live2d_generated_settings").hide();
-
-      $("#live2d_file_asset_select").val(character_settings.audioSettings.asset);
-
-      $('#live2d_audio_min_pitch').val(character_settings.audioSettings.minPitch);
-      $('#live2d_audio_min_pitch_value').text(character_settings.audioSettings.minPitch);
-      $('#live2d_audio_max_pitch').val(character_settings.audioSettings.maxPitch);
-      $('#live2d_audio_max_pitch_value').text(character_settings.audioSettings.maxPitch);
-      $("#live2d_audio_play_full").prop('checked', character_settings.audioSettings.wait);
-  }
-
-  if (character_settings.audioOrigin == "generated") {
-      $("#live2d_audio_origin").val("generated");
-      $("#live2d_file_settings").hide();
-      $("#live2d_generated_settings").show();
-
-      $('#live2d_generated_min_frequency').val(character_settings.audioSettings.minFrequency);
-      $('#live2d_generated_min_frequency_value').text(character_settings.audioSettings.minFrequency);
-      $('#live2d_generated_max_frequency').val(character_settings.audioSettings.maxFrequency);
-      $('#live2d_generated_max_frequency_value').text(character_settings.audioSettings.maxFrequency);
-  }
-  */
 }
 
 async function onCharacterRefreshClick() {
@@ -295,6 +243,26 @@ async function onMotionOverrideChange() {
   loadLive2d();
 }
 
+async function onExpressionDefaultChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  const expression_default = $("#live2d_expression_select_default").val();
+
+  extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["expression"] = expression_default;
+  saveSettingsDebounced();
+  loadLive2d();
+}
+
+async function onMotionDefaultChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  const motion_default = $("#live2d_motion_select_default").val();
+
+  extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"] = motion_default;
+  saveSettingsDebounced();
+  loadLive2d();
+}
+
 async function loadModelUi() {
   const character = $("#live2d_character_select").val();
   const model_path = $("#live2d_model_select").val();
@@ -319,7 +287,11 @@ async function loadModelUi() {
 
   if (extension_settings.live2d.characterModelsSettings[character][model_path] === undefined) {
     const default_scale = 1.0
-    extension_settings.live2d.characterModelsSettings[character][model_path] = {"scale": default_scale, "override": {"expression": "none", "motion": "none"}};
+    extension_settings.live2d.characterModelsSettings[character][model_path] = {
+      "scale": default_scale,
+      "override": {"expression": "none", "motion": "none"},
+      "default": {"expression": "none", "motion": "none"}
+    };
     extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"] = {};
 
     for (const expression of CLASSIFY_EXPRESSIONS) {
@@ -348,6 +320,30 @@ async function loadModelUi() {
       $(`#live2d_motion_select_override`).append(new Option(motion+" "+motion_id, motion+"_id="+motion_id));
     }
   }
+
+  $(`#live2d_expression_select_override`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"]);
+  $(`#live2d_motion_select_override`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"]);
+
+  // Default expression/motion
+  $("#live2d_expression_select_default").append('<option value="none">Select expression</option>');
+  $("#live2d_motion_select_default").append('<option value="none">Select motion</option>');
+
+  $("#live2d_expression_select_default").on("change", onExpressionDefaultChange);
+  $("#live2d_motion_select_default").on("change", onMotionDefaultChange);
+
+  for (const i of model_expressions) {
+    $(`#live2d_expression_select_default`).append(new Option(i.name, i.name));
+  }
+
+  for (const motion in model_motions) {
+    $(`#live2d_motion_select_default`).append(new Option(motion+" random", motion+"_id=random"));
+    for (const motion_id in model_motions[motion]) {
+      $(`#live2d_motion_select_default`).append(new Option(motion+" "+motion_id, motion+"_id="+motion_id));
+    }
+  }
+
+  $(`#live2d_expression_select_default`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["expression"]);
+  $(`#live2d_motion_select_default`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"]);
 
   // Classify expressions mapping
   for (const expression of CLASSIFY_EXPRESSIONS) {
@@ -773,6 +769,7 @@ async function updateExpression(chat_id) {
   let model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["expression"];
   let model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["motion"];
 
+  // Override animations
   if (override_expression != "none") {
     console.debug(DEBUG_PREFIX,"Applying override expression")
     model_expression = override_expression;
@@ -783,6 +780,17 @@ async function updateExpression(chat_id) {
     model_motion = override_motion;
   }
 
+  // Fallback animations
+  if (model_expression == "none") {
+    console.debug(DEBUG_PREFIX,"Expression is none, applying default expression");
+    model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["expression"];
+  }
+
+  if (model_motion == "none") {
+    console.debug(DEBUG_PREFIX,"Motion is none, applying default motion");
+    model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"];
+  }
+
   console.debug(DEBUG_PREFIX,"Playing expression",expression,":", model_expression, model_motion);
   //console.debug(DEBUG_PREFIX,models)
   //console.debug(DEBUG_PREFIX,models[character]);
@@ -790,7 +798,6 @@ async function updateExpression(chat_id) {
   if (model_expression != "none") {
     models[character].expression(model_expression);
   }
-  // TODO fallback
 
   if (model_motion != "none") {
     const motion_label_split = model_motion.split("_id=")
