@@ -12,6 +12,7 @@ DONE:
   - option to test expression/animation (use override menu)
   - add a default expression and fallback to it when mapping for classified expression is none
   - remove case sensitivy to expression name, some model have "name" and "Name" keys
+  - UI for user to connect hit area with animations and message
 
 TODO:
 - Security
@@ -19,18 +20,16 @@ TODO:
   - Resize model on resize window
 - Features
   - button clear character mapping / all
-  - Automatically load hit frames and animation list
-  - UI for user to connect hit frames with animation
   - Play mouth animation when talking (message length dependant)
   - Group chat mode
-  - activate/disable hitframes message + auto-send
   - option to delete a model mapping
   - option to detach live2d ui
   - option to hide sprite
+  - don't send hit area when moving
 */
 
 import { loadFileToDocument, trimToEndSentence, trimToStartSentence } from "../../../utils.js";
-import { saveSettingsDebounced, getRequestHeaders, eventSource, event_types, sendMessageAsUser } from "../../../../script.js";
+import { saveSettingsDebounced, getRequestHeaders, eventSource, event_types, sendMessageAsUser, Generate } from "../../../../script.js";
 import { getContext, extension_settings, ModuleWorkerWrapper, getApiUrl, doExtrasFetch, modules } from "../../../extensions.js";
 export { MODULE_NAME };
 
@@ -276,25 +275,30 @@ async function loadModelUi() {
   const character = $("#live2d_character_select").val();
   const model_path = $("#live2d_model_select").val();
   const expression_ui = $("#live2d_expression_mapping");
-  const hit_frame_ui = $("#live2d_hit_frame_mapping");
+  const hit_areas_ui = $("#live2d_hit_areas_mapping");
   const model = await live2d.Live2DModel.from(model_path);
 
   expression_ui.empty();
-  hit_frame_ui.empty();
+  hit_areas_ui.empty();
 
   console.debug(DEBUG_PREFIX, "loading settings of model:",model);
 
   let model_expressions = model.internalModel.settings.expressions;
   let model_motions = model.internalModel.settings.motions;
+  let model_hit_areas = model.internalModel.hitAreas;
 
   if (model_expressions === undefined)
     model_expressions = [];
 
   if (model_motions === undefined)
-    model_motions = [];
+    model_motions = {};
 
-  console.debug(DEBUG_PREFIX, "expressions:",model_expressions);
-  console.debug(DEBUG_PREFIX, "motions:",model_motions);
+  if (model_hit_areas === undefined)
+    model_hit_areas = {};
+
+  console.debug(DEBUG_PREFIX, "expressions:", model_expressions);
+  console.debug(DEBUG_PREFIX, "motions:", model_motions);
+  console.debug(DEBUG_PREFIX, "hit areas:", model_hit_areas);
 
   // Initialize new model
   if (extension_settings.live2d.characterModelsSettings[character] === undefined)
@@ -307,11 +311,17 @@ async function loadModelUi() {
       "override": {"expression": "none", "motion": "none"},
       "default": {"expression": "none", "motion": "none"}
     };
-    extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"] = {};
 
+    extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"] = {};
     for (const expression of CLASSIFY_EXPRESSIONS) {
       extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression] = {'expression': 'none', 'motion': 'none'};
     }
+
+    extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"] = {};
+    for (const area in model_hit_areas) {
+      extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][area] = {'expression': 'none', 'motion': 'none', 'message': ''}
+    }
+
     saveSettingsDebounced();
   }
 
@@ -319,7 +329,6 @@ async function loadModelUi() {
   $("#live2d_model_scale_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
 
   // Override expression/motion
-  
   $("#live2d_expression_select_override")
   .find('option')
   .remove()
@@ -386,6 +395,54 @@ async function loadModelUi() {
   $(`#live2d_expression_select_default`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["expression"]);
   $(`#live2d_motion_select_default`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"]);
 
+  // Hit areas mapping
+  // TODO: factorize
+  for (const hit_area in model_hit_areas) {
+    hit_areas_ui.append(`
+    <div class="live2d-parameter">
+        <div class="live2d-parameter-title">
+            <label for="live2d_hit_area_${hit_area}">
+              ${hit_area}
+            </label>
+        </div>
+        <div class="live2d_hit_area_select_div" class="live2d-select-div">
+        <select id="live2d_hit_area_expression_select_${hit_area}">
+        </select>
+        <select id="live2d_hit_area_motion_select_${hit_area}">
+        </select>
+        <textarea id="live2d_hit_area_message_${hit_area}" type="text" class="text_pole textarea_compact" rows="2"
+        placeholder="Write message te send when clicking the area."></textarea>
+        </div>
+    </div>
+    `)
+
+    $(`#live2d_hit_area_expression_select_${hit_area}`).append('<option value="none">Select expression</option>');
+  
+    for (const i of model_expressions) {
+      const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
+      $(`#live2d_hit_area_expression_select_${hit_area}`).append(new Option(name, name));
+    }
+
+    $(`#live2d_hit_area_motion_select_${hit_area}`)
+      .append('<option value="none">Select motion</option>');
+  
+    for (const motion in model_motions) {
+      $(`#live2d_hit_area_motion_select_${hit_area}`).append(new Option(motion+" random", motion+"_id=random"));
+      for (const motion_id in model_motions[motion]) {
+        $(`#live2d_hit_area_motion_select_${hit_area}`).append(new Option(motion+" "+motion_id, motion+"_id="+motion_id));
+      }
+    }
+    
+    // Loading saved settings
+    $(`#live2d_hit_area_expression_select_${hit_area}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][hit_area]["expression"])
+    $(`#live2d_hit_area_motion_select_${hit_area}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][hit_area]["motion"])
+    $(`#live2d_hit_area_message_${hit_area}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][hit_area]["message"]);
+
+    $(`#live2d_hit_area_expression_select_${hit_area}`).on("change", function() {updateHitAreaMapping(hit_area)});
+    $(`#live2d_hit_area_motion_select_${hit_area}`).on("change", function() {updateHitAreaMapping(hit_area)});
+    $(`#live2d_hit_area_message_${hit_area}`).on("change", function() {updateHitAreaMapping(hit_area)});
+  }
+
   // Classify expressions mapping
   for (const expression of CLASSIFY_EXPRESSIONS) {
     expression_ui.append(`
@@ -429,16 +486,20 @@ async function loadModelUi() {
     $(`#live2d_motion_select_${expression}`).on("change", function() {updateExpressionMapping(expression)});
   }
 
-
-  // load model settings
-  const model_expression_mapping_dom = $("#live2d_expression_mapping");
-
-  //for (const i in model.internalModel.)
-
-  // Load mapped settings
-
-
   $("#live2d_model_settings").show();
+}
+
+async function updateHitAreaMapping(hitArea) {
+  const character = $("#live2d_character_select").val();
+  const model = $("#live2d_model_select").val();
+  const model_expression = $(`#live2d_hit_area_expression_select_${hitArea}`).val();
+  const model_motion = $(`#live2d_hit_area_motion_select_${hitArea}`).val();
+  const message = $(`#live2d_hit_area_message_${hitArea}`).val();
+
+  extension_settings.live2d.characterModelsSettings[character][model]["hitAreas"][hitArea] = {"expression": model_expression, "motion": model_motion, "message": message};
+  saveSettingsDebounced();
+
+  console.debug(DEBUG_PREFIX,"Updated hit area mapping:",hitArea,extension_settings.live2d.characterModelsSettings[character][model]["hitAreas"][hitArea]);
 }
 
 async function updateExpressionMapping(expression) {
@@ -450,7 +511,7 @@ async function updateExpressionMapping(expression) {
   extension_settings.live2d.characterModelsSettings[character][model]["expressions"][expression] = {"expression": model_expression, "motion": model_motion};
   saveSettingsDebounced();
 
-  console.debug(DEBUG_PREFIX,"Updated:",expression,extension_settings.live2d.characterModelsSettings[character][model]["expressions"][expression]);
+  console.debug(DEBUG_PREFIX,"Updated expression mapping:",expression,extension_settings.live2d.characterModelsSettings[character][model]["expressions"][expression]);
 }
 
 //#############################//
@@ -458,9 +519,61 @@ async function updateExpressionMapping(expression) {
 //#############################//
 
 
-async function onHitAreasClick(hitAreas) {
-  $('#send_textarea').val("") // clear message area to avoid double message
-  console.debug(DEBUG_PREFIX,"Detected click on hit areas:", hitAreas);
+async function onHitAreasClick(character, model, hitAreas) {
+  const model_path = extension_settings.live2d.characterModelMapping[character];
+  const model_hit_areas = model.internalModel.hitAreas;
+
+  console.debug(DEBUG_PREFIX,"Detected click on hit areas:", hitAreas, "of", model.tag);
+  console.debug(DEBUG_PREFIX,"Checking priority from:", model_hit_areas);
+
+  let selected_area;
+  let selected_area_priority;
+  for (const area in model_hit_areas) {
+    if (!hitAreas.includes(area))
+      continue;
+    console.debug(DEBUG_PREFIX,"Checking",model_hit_areas[area]);
+    if (selected_area === undefined || model_hit_areas[area].index < selected_area_priority) {
+      selected_area = model_hit_areas[area].name;
+      selected_area_priority = model_hit_areas[area].index;
+      console.debug(DEBUG_PREFIX,"higher priority selected",selected_area);
+    }
+  }
+  
+  console.debug(DEBUG_PREFIX,"Selected area:", selected_area);
+
+  const model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][selected_area]["expression"];
+  const model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][selected_area]["motion"];
+  const message = extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][selected_area]["message"];
+
+  console.debug(DEBUG_PREFIX,"Mapping:", extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][selected_area])
+  
+  if (message != "") {
+    $('#send_textarea').val("") // clear message area to avoid double message
+    sendMessageAsUser(message);
+    if (extension_settings.live2d.autoSendInteraction)
+      await getContext().generate(); // TODO: check autosend
+  }
+
+  if (model_expression != "none") {
+    model.expression(model_expression);
+    console.debug(DEBUG_PREFIX,"Playing hit area expression", model_expression);
+  }
+
+  if (model_motion != "none") {
+    const motion_label_split = model_motion.split("_id=")
+    const motion_label = motion_label_split[0];
+    const motion_id = motion_label_split[1];
+
+    model.internalModel.motionManager.stopAllMotions();
+
+    if (motion_id == "random")
+      model.motion(motion_label);
+    else
+      model.motion(motion_label,motion_id);
+
+    
+    console.debug(DEBUG_PREFIX,"Playing hit area motion", model_motion);
+  }
 
   //sendMessageAsUser(text);
   
@@ -506,11 +619,16 @@ async function loadLive2d() {
   }
 
   document.getElementById("live2d-canvas").hidden = true;
-
-  if (!extension_settings.live2d.enabled)
-    return;
-
   const character = getContext().name2;
+
+  if (!extension_settings.live2d.enabled) {
+    if (models[character] !== undefined) {
+      models[character].destroy(true, true, true);
+      delete models[character];
+    }
+    return;
+  }
+
 
   if (extension_settings.live2d.characterModelMapping[character] == undefined)
     return;
@@ -522,7 +640,6 @@ async function loadLive2d() {
 
   let coord_x = (innerWidth - model.width) / 2;
   let coord_y = innerHeight * 0.1;
-
   // Need to free memory ?
   if (models[character] !== undefined) {
     coord_x = models[character].x;
@@ -587,7 +704,7 @@ async function loadLive2d() {
   //model.on("click", () => {model.expression();model.internalModel.motionManager.stopAllMotions(); model.motion("")}); // check stop motion
 
   // handle tapping
-  model.on("hit", (hitAreas) => onHitAreasClick(hitAreas));
+  model.on("hit", (hitAreas) => onHitAreasClick(character, model, hitAreas));
   /*
   model.on("hit", (hitAreas) => {
 
@@ -748,6 +865,7 @@ jQuery(async () => {
     // Set user interactions
     $("#live2d_enabled").on("click", onEnabledClick);
     $("#live2d_follow_cursor").on("click", onFollowCursorClick);
+    $('#live2d_auto_send_interaction').on("click", onAutoSendInteractionClick);
 
     $("#live2d_character_select").on("change", onCharacterChange);
     $("#live2d_character_refresh_button").on("click", onCharacterRefreshClick);
