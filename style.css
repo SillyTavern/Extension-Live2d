@@ -3,7 +3,7 @@
     display: flex;
     height: calc(100vh - var(--topBarBlockSize));
     width: 100vw;
-    z-index: 2;
+    z-index: 3;
     position: fixed;
     top: 0;
     padding: 0;
@@ -17,6 +17,11 @@
 
 #visual-novel-wrapper {
     z-index: 1;
+    position: fixed;
+}
+
+#expression-wrapper {
+    z-index: 2;
     position: fixed;
 }
 
