@@ -1,5 +1,23 @@
 #live2d-canvas{
     background:transparent;
+    display: flex;
+    height: calc(100vh - var(--topBarBlockSize));
+    width: 100vw;
+    z-index: 2;
+    position: fixed;
+    top: 0;
+    padding: 0;
+    margin: 0;
+}
+
+#bg1 {
+    z-index: 0;
+    position: fixed;
+}
+
+#visual-novel-wrapper {
+    z-index: 1;
+    position: fixed;
 }
 
 .live2d-character-select-div {

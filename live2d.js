@@ -1,12 +1,14 @@
 
 import { trimToEndSentence, trimToStartSentence } from "../../../utils.js";
 import { getRequestHeaders, sendMessageAsUser } from "../../../../script.js";
+import { getGroupChatNames } from "../../../group-chats.js";
 import { getContext, extension_settings, getApiUrl, doExtrasFetch, modules } from "../../../extensions.js";
 
 import {
     DEBUG_PREFIX,
     live2d,
-    FALLBACK_EXPRESSION
+    FALLBACK_EXPRESSION,
+    CANVAS_ID
   } from "./constants.js";
 
 export {
@@ -17,8 +19,9 @@ export {
 let models = {};
 let app = null;
 
-async function onHitAreasClick(character, model, hitAreas) {
+async function onHitAreasClick(character, hitAreas) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
+    const model = models[character];
     const model_hit_areas = model.internalModel.hitAreas;
   
     console.debug(DEBUG_PREFIX,"Detected click on hit areas:", hitAreas, "of", model.tag);
@@ -106,101 +109,136 @@ function showFrames(model) {
 }
   
 async function loadLive2d() {
+    console.debug(DEBUG_PREFIX, "Updating live2d app.")
+    // 1) Cleanup memory
     // Reset the PIXI app
     if(app !== null) {
         app.destroy();
         app = null;
     }
 
-    document.getElementById("live2d-canvas").hidden = true;
-    const character = getContext().name2;
+    // Delete the canvas
+    if (document.getElementById(CANVAS_ID) !== null)
+        document.getElementById(CANVAS_ID).remove();
 
-    // Free memory
-    if (!extension_settings.live2d.enabled) {
-        if (models[character] !== undefined) {
+    // Delete live2d models from memory
+    for (const character in models) {
         models[character].destroy(true, true, true);
         delete models[character];
+        console.debug(DEBUG_PREFIX,"Delete model from memory for", character);
+    }
+    
+    if (!extension_settings.live2d.enabled)
+        return;
+
+    // Create new canvas and PIXI app
+    var canvas = document.createElement('canvas');
+    canvas.id = CANVAS_ID;
+
+
+    // TODO: factorise
+    const context = getContext();
+    const group_id = context.groupId;
+    let chat_members = [context.name2];
+
+    if (group_id !== null) {
+        chat_members = [];
+        for(const i of context.groups) {
+            if (i.id == context.groupId) {
+                for(const j of i.members) {
+                    let char_name = j.replace(/\.[^/.]+$/, "")
+                    if (char_name.includes("default_"))
+                        char_name = char_name.substring("default_".length);
+                    
+                    chat_members.push(char_name);
+                }
+            }
         }
-        return;
     }
-
-    if (extension_settings.live2d.characterModelMapping[character] == undefined)
-        return;
-
-    document.getElementById("live2d-canvas").hidden = false;
-
-    const model_path = extension_settings.live2d.characterModelMapping[character];
-    let model = await live2d.Live2DModel.from(model_path);// TODO: multiple models
-
-    let coord_x = (innerWidth - model.width) / 2;
-    let coord_y = innerHeight * 0.1;
-    // Need to free memory ?
-    if (models[character] !== undefined) {
-        coord_x = models[character].x;
-        coord_y = models[character].y;
-        models[character].destroy(true, true, true);
-    }
-
-    models[character] = model;
+    
+    $("body").append(canvas);
 
     app = new PIXI.Application({
-        view: document.getElementById("live2d-canvas"),
+        view: document.getElementById(CANVAS_ID),
         autoStart: true,
         resizeTo: window,
         backgroundAlpha: 0
     });
 
-    app.stage.addChild(model);
+    console.debug(DEBUG_PREFIX,"Loading models of",chat_members);
 
-    console.debug(DEBUG_PREFIX,innerWidth, " ", innerHeight)
+    // Load each character model
+    let offset = 0;
+    for (const character of chat_members) {
+        console.debug(DEBUG_PREFIX,"Loading model of",character)
 
-    const scaleX = ((innerWidth) / model.width) * extension_settings.live2d.characterModelsSettings[character][model_path]["scale"];
-    const scaleY = ((innerHeight) / model.height) * extension_settings.live2d.characterModelsSettings[character][model_path]["scale"];
+        if (extension_settings.live2d.characterModelMapping[character] == undefined)
+            continue;
 
-    // Scale to canvas
-    model.scale.set(Math.min(scaleX, scaleY));
+        console.debug(DEBUG_PREFIX,"Loading",extension_settings.live2d.characterModelMapping[character])
 
-    model.x = coord_x;
-    model.y = coord_y;
-
-    draggable(model);
-
-    // Debug frames
-    if (extension_settings.live2d.showFrames)
-        showFrames(model);
-
-    // Override expression/motion
-    const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"];
-    const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"];
-
-    if (override_expression != "none") {
-        model.expression(override_expression);
-        console.debug(DEBUG_PREFIX,"Playing override expression", override_expression);
-    }
-
-    if (override_motion != "none") {
-        console.debug(DEBUG_PREFIX,"Applying override motion")
-
-        const motion_label_split = override_motion.split("_id=")
-        const motion_label = motion_label_split[0];
-        const motion_id = motion_label_split[1];
-
-        if (motion_id == "random")
-        models[character].motion(motion_label);
-        else
-        models[character].motion(motion_label,motion_id);
-
+        const model_path = extension_settings.live2d.characterModelMapping[character];
+        const model = await live2d.Live2DModel.from(model_path);
+        let coord_x = (innerWidth - model.width) / 2;
+        let coord_y = innerHeight * 0.1;
         
-        console.debug(DEBUG_PREFIX,"Playing override expression", override_motion);
+        /*/ Need to free memory ?
+        if (models[character] !== undefined) {
+            coord_x = models[character].x;
+            coord_y = models[character].y;
+            models[character].destroy(true, true, true);
+        }*/
+
+        models[character] = model;
+        app.stage.addChild(model);
+
+        const scaleX = ((innerWidth) / model.width) * extension_settings.live2d.characterModelsSettings[character][model_path]["scale"];
+        const scaleY = ((innerHeight) / model.height) * extension_settings.live2d.characterModelsSettings[character][model_path]["scale"];
+
+        // Scale to canvas
+        model.scale.set(Math.min(scaleX, scaleY));
+        model.x = coord_x + offset;
+        model.y = coord_y;
+        //offset += model.width;
+
+        draggable(model);
+
+        // Debug frames
+        if (extension_settings.live2d.showFrames)
+            showFrames(model);
+
+        // Override expression/motion
+        const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"];
+        const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"];
+
+        if (override_expression != "none") {
+            model.expression(override_expression);
+            console.debug(DEBUG_PREFIX,"Playing override expression", override_expression);
+        }
+
+        if (override_motion != "none") {
+            console.debug(DEBUG_PREFIX,"Applying override motion")
+
+            const motion_label_split = override_motion.split("_id=")
+            const motion_label = motion_label_split[0];
+            const motion_id = motion_label_split[1];
+
+            if (motion_id == "random")
+                model.motion(motion_label);
+            else
+                model.motion(motion_label,motion_id);
+
+            console.debug(DEBUG_PREFIX,"Playing override expression", override_motion);
+        }
+
+        // handle tapping
+        model.on("hit", (hitAreas) => onHitAreasClick(character, hitAreas));
+
+        // Set cursor behavior
+        model._autoInteract = extension_settings.live2d.followCursor;
+        console.debug(DEBUG_PREFIX, "Finished loading model:", model);
     }
-
-    // handle tapping
-    model.on("hit", (hitAreas) => onHitAreasClick(character, model, hitAreas));
-
-    // Set cursor behavior
-    model._autoInteract = extension_settings.live2d.followCursor;
-
-    console.debug(DEBUG_PREFIX, "Finished loading model:", model);
+    console.debug(DEBUG_PREFIX, "Models:", models);
 }
 
 async function updateExpression(chat_id) {
@@ -242,7 +280,7 @@ async function updateExpression(chat_id) {
     }
 
     if (model_motion == "none") {
-        console.debug(DEBUG_PREFIX,"Motion is none, applying default motion");
+        console.debug(DEBUG_PREFIX,"Motion is none, await loadLive2d();lying default motion");
         model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"];
     }
 
@@ -264,9 +302,9 @@ async function updateExpression(chat_id) {
         console.debug(DEBUG_PREFIX,motion_label,motion_id);
 
         if (motion_id == "random")
-        models[character].motion(motion_label);
+            models[character].motion(motion_label);
         else
-        models[character].motion(motion_label,motion_id);
+            models[character].motion(motion_label,motion_id);
     }
 }
   

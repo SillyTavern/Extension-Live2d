@@ -160,18 +160,12 @@ jQuery(async () => {
     moduleWorker();
 
     // Events
-    eventSource.on(event_types.CHAT_CHANGED, updateCharactersModels);
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersList);
-    eventSource.on(event_types.GROUP_UPDATED, updateCharactersList);
+    eventSource.on(event_types.CHAT_CHANGED, updateCharactersModels);
+    //eventSource.on(event_types.GROUP_UPDATED, updateCharactersModels);
+    //eventSource.on(event_types.GROUP_UPDATED, updateCharactersList);
 
     eventSource.on(event_types.MESSAGE_RECEIVED, (chat_id) => updateExpression(chat_id));
-
-    // DBG Tests
-
-    var canvas = document.createElement('canvas');
-    canvas.id = "live2d-canvas";
-    document.getElementById("expression-wrapper").appendChild(canvas);
-
     updateCharactersListOnce();
 
     //await loadLive2d();

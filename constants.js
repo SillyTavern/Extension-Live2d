@@ -6,7 +6,8 @@ export {
     CLASSIFY_EXPRESSIONS,
     FALLBACK_EXPRESSION,
     extensionFolderPath,
-    live2d
+    live2d,
+    CANVAS_ID
 }
 
 const MODULE_NAME = 'Live2d';
@@ -62,3 +63,4 @@ for(const i of JS_LIBS){
 }
 
 const live2d = PIXI.live2d;
+const CANVAS_ID = "live2d-canvas";

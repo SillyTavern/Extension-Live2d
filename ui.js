@@ -30,21 +30,21 @@ export {
     updateCharactersListOnce
 }
 
-let characters_list = []
-let characters_models = {}
+let characters_list = [];
+let characters_models = {};
 
 async function onEnabledClick() {
     extension_settings.live2d.enabled = $('#live2d_enabled').is(':checked');
     saveSettingsDebounced();
 
-    loadLive2d();
+    await loadLive2d();
 }
 
 async function onFollowCursorClick() {
   extension_settings.live2d.followCursor = $('#live2d_follow_cursor').is(':checked');
   saveSettingsDebounced();
 
-  loadLive2d();
+  await loadLive2d();
 }
 
 async function onAutoSendInteractionClick() {
@@ -55,7 +55,7 @@ async function onAutoSendInteractionClick() {
 async function onShowFramesClick() {
   extension_settings.live2d.showFrames = $('#live2d_show_frames').is(':checked');
   saveSettingsDebounced();
-  loadLive2d();
+  await loadLive2d();
 }
 
 async function onCharacterChange() {
@@ -75,11 +75,13 @@ async function onCharacterChange() {
           .append('<option value="none">None</option>')
           .val('none')
 
-      for (const i of characters_models[character]) {
-          const model_folder = i[0] + " (" + i[1].replace(/^.*[\\\/]/, '') + ")";
-          const model_settings_path = i[1];
-          $("#live2d_model_select").append(new Option(model_folder, model_settings_path));
-      }
+  if (characters_models[character] !== undefined) {
+    for (const i of characters_models[character]) {
+        const model_folder = i[0] + " (" + i[1].replace(/^.*[\\\/]/, '') + ")";
+        const model_settings_path = i[1];
+        $("#live2d_model_select").append(new Option(model_folder, model_settings_path));
+    }
+  }
 
   if (extension_settings.live2d.characterModelMapping[character] !== undefined) {
     $("#live2d_model_select").val(extension_settings.live2d.characterModelMapping[character]);
@@ -108,14 +110,14 @@ async function onModelScaleChange() {
     extension_settings.live2d.characterModelsSettings[character][model_path]["scale"] = Number($('#live2d_model_scale').val());
     $("#live2d_model_scale_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
     saveSettingsDebounced();
-    loadLive2d();
+    await loadLive2d();
 }
 
 async function onModelRefreshClick() {
   updateCharactersModels(true);
   $("#live2d_model_select").val("none");
   $("#live2d_model_select").trigger("change");
-  loadLive2d();
+  await loadLive2d();
 }
 
 async function onModelChange() {
@@ -126,14 +128,14 @@ async function onModelChange() {
     $("#live2d_model_settings").hide();
     delete extension_settings.live2d.characterModelMapping[character];
     saveSettingsDebounced();
-    loadLive2d();
+    await loadLive2d();
     return;
   }
 
   extension_settings.live2d.characterModelMapping[character] = model_path;
   saveSettingsDebounced();
 
-  loadLive2d();
+  await loadLive2d();
   loadModelUi();
 }
 
@@ -144,7 +146,7 @@ async function onExpressionOverrideChange() {
 
   extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"] = expression_override;
   saveSettingsDebounced();
-  loadLive2d();
+  await loadLive2d();
 }
 
 async function onMotionOverrideChange() {
@@ -154,7 +156,7 @@ async function onMotionOverrideChange() {
 
   extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"] = motion_override;
   saveSettingsDebounced();
-  loadLive2d();
+  await loadLive2d();
 }
 
 async function onExpressionDefaultChange() {
@@ -164,7 +166,7 @@ async function onExpressionDefaultChange() {
 
   extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["expression"] = expression_default;
   saveSettingsDebounced();
-  loadLive2d();
+  //await loadLive2d();
 }
 
 async function onMotionDefaultChange() {
@@ -174,7 +176,7 @@ async function onMotionDefaultChange() {
 
   extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"] = motion_default;
   saveSettingsDebounced();
-  loadLive2d();
+  //await loadLive2d();
 }
 
 async function loadModelUi() {
@@ -424,8 +426,6 @@ function updateCharactersList() {
 
     current_characters = Array.from(current_characters);
 
-    console.debug(DEBUG_PREFIX,context)
-
     if (current_characters.length == 0)
         return;
 
@@ -485,14 +485,40 @@ function updateCharactersList() {
 }
 
 async function updateCharactersModels(refreshButton=false) {
-    const character = getContext().name2; // TODO group chat
-    if (refreshButton || characters_models[character] === undefined){
-      characters_models[character] = await getCharacterLive2dFiles(character);
-      console.debug(DEBUG_PREFIX,"Updated models to:",characters_models);
-  
-      $("#live2d_character_select").trigger("change");
+    const context = getContext();
+    //const character = context.name2; // TODO group chat
+    const is_group = context.groupId !== null;
+    let chat_members = [];
+
+    console.debug(DEBUG_PREFIX,"Updating models mapping");
+
+    // TODO: replace using group-chat funct
+    if (is_group) {
+      for(const i of context.groups) {
+        if (i.id == context.groupId) {
+            for(const j of i.members) {
+                let char_name = j.replace(/\.[^/.]+$/, "")
+                if (char_name.includes("default_"))
+                    char_name = char_name.substring("default_".length);
+                
+                chat_members.push(char_name);
+            }
+        }
+      }
     }
-    loadLive2d();
+    else
+        chat_members = [context.name2];
+
+    for (const character of chat_members) {
+      if (refreshButton || characters_models[character] === undefined){
+        characters_models[character] = await getCharacterLive2dFiles(character);
+        console.debug(DEBUG_PREFIX,"Updated models of",character);
+      }
+    }
+
+    console.debug(DEBUG_PREFIX,"Updated models to:",characters_models);
+    $("#live2d_character_select").trigger("change");
+    await loadLive2d();
 }
 
 const delay = s => new Promise(res => setTimeout(res, s*1000));
