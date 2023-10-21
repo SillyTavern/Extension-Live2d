@@ -287,10 +287,10 @@ async function loadModelUi() {
   let model_hit_areas = model.internalModel.hitAreas;
   let model_parameter_ids = []
   
-  if (model.internalModel.coreModel._model !== undefined
-    && model.internalModel.coreModel._model.parameters !== undefined
-    && model.internalModel.coreModel._model.parameters.ids !== undefined)
+  // Some model have it there
+  if (model.internalModel.coreModel._model?.parameters?.ids !== undefined) {
     model_parameter_ids = model.internalModel.coreModel._model.parameters.ids;
+  }
 
   // Free memory
   model.destroy(true, true, true);
