@@ -7,7 +7,9 @@ export {
     FALLBACK_EXPRESSION,
     extensionFolderPath,
     live2d,
-    CANVAS_ID
+    CANVAS_ID,
+    delay,
+    TEST_MESSAGE
 }
 
 const MODULE_NAME = 'Live2d';
@@ -64,3 +66,7 @@ for(const i of JS_LIBS){
 
 const live2d = PIXI.live2d;
 const CANVAS_ID = "live2d-canvas";
+
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+const TEST_MESSAGE = "TEST MESSAGE: " + new Array(500 + 1).join( "#" );

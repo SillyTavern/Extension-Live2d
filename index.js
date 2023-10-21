@@ -17,6 +17,7 @@ DONE:
   - Group chat mode
   - button clear all models settings for a character
   - Coordinate sliders
+  - Play mouth animation when talking (message length dependant)
 
 TODO:
 - Security
@@ -24,12 +25,16 @@ TODO:
   - Resize model on resize window
 - Features
   - Default model click mapping
-  - Play mouth animation when talking (message length dependant)
-  - option to detach live2d ui
-  - option to hide sprite
+  - starting animation option
+  - option to hide sprite per character
   - don't send hit area when moving
   - Cleanup useless imports and comments
+
+IDEAS:
+  - Synchronize mouth with TTS audio (maybe can make it play through live2d with lip sync)
+  - option to detach live2d ui
   - Look at speaker option
+  - Flip Y option
 */
 import { eventSource, event_types } from "../../../../script.js";
 import { getContext, extension_settings, ModuleWorkerWrapper, modules } from "../../../extensions.js";
@@ -54,6 +59,9 @@ import {
   onModelChange,
   onModelScaleChange,
   onModelCoordChange,
+  onParamMouthOpenIdChange,
+  onMouthOpenSpeedChange,
+  onMouthTimePerCharacterChange,
   onExpressionOverrideChange,
   onMotionOverrideChange,
   onExpressionDefaultChange,
@@ -64,8 +72,8 @@ import {
 } from "./ui.js";
 
 import {
-  loadLive2d,
-  updateExpression
+  updateExpression,
+  playMessage
 } from "./live2d.js";
 
 const UPDATE_INTERVAL = 1000;
@@ -153,6 +161,10 @@ jQuery(async () => {
     $("#live2d_model_x").on("input", onModelCoordChange);
     $("#live2d_model_y").on("input", onModelCoordChange);
 
+    $("#live2d_param_mouth_open_y_id_select").on("change", onParamMouthOpenIdChange);
+    $("#live2d_mouth_open_speed").on("input", onMouthOpenSpeedChange);
+    $("#live2d_mouth_time_per_character").on("input", onMouthTimePerCharacterChange);
+
     $("#live2d_expression_select_override").on("change", onExpressionOverrideChange);
     $("#live2d_motion_select_override").on("change", onMotionOverrideChange);
     
@@ -171,6 +183,7 @@ jQuery(async () => {
     eventSource.on(event_types.GROUP_UPDATED, updateCharactersModels);
 
     eventSource.on(event_types.MESSAGE_RECEIVED, (chat_id) => updateExpression(chat_id));
+    eventSource.on(event_types.MESSAGE_RECEIVED, (chat_id) => playMessage(chat_id));
     updateCharactersListOnce();
 
     //await loadLive2d();

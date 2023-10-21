@@ -1,14 +1,14 @@
 
 import { trimToEndSentence, trimToStartSentence } from "../../../utils.js";
 import { getRequestHeaders, sendMessageAsUser } from "../../../../script.js";
-import { getGroupChatNames } from "../../../group-chats.js";
 import { getContext, extension_settings, getApiUrl, doExtrasFetch, modules } from "../../../extensions.js";
 
 import {
     DEBUG_PREFIX,
     live2d,
     FALLBACK_EXPRESSION,
-    CANVAS_ID
+    CANVAS_ID,
+    delay
   } from "./constants.js";
 
 export {
@@ -18,11 +18,15 @@ export {
     moveModel,
     removeModel,
     playExpression,
-    playMotion
+    playMotion,
+    playTalk,
+    playMessage
 }
 
 let models = {};
 let app = null;
+let is_talking = {}
+let abortTalking = {};
 
 async function onHitAreasClick(character, hitAreas) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
@@ -352,7 +356,6 @@ function moveModel(character, x, y) {
         return;
 
     const model = models[character];
-    console.debug(DEBUG_PREFIX,"HEEEEE",model.scale)
     model.x = ((innerWidth / 2) - (model.width / 2)) + (innerWidth / 2) * x;
     model.y = ((innerHeight / 2) - (model.height / 2)) + ((innerHeight / 2)) * y;
 }
@@ -431,4 +434,67 @@ function playMotion(character, motion) {
         model.motion(motion_label);
     else
         model.motion(motion_label,motion_id);
+}
+
+async function playTalk(character, text) {
+    console.debug(DEBUG_PREFIX,"Playing mouth animation for",character,"message:",text);
+    // No model loaded for character
+    if (models[character] === undefined)
+        return;
+
+    abortTalking[character] = false;
+
+    // Character is already talking TODO: stop previous talk animation
+    if (is_talking[character] !== undefined && is_talking[character] == true) {
+        console.debug(DEBUG_PREFIX,"Character is already talking abort");
+        while (is_talking[character]) {
+            abortTalking[character] = true;
+            await delay(100);
+        }
+        abortTalking[character] = false;
+        //return;
+    }
+
+    const model = models[character];
+    const model_path = extension_settings.live2d.characterModelMapping[character];
+    const parameter_mouth_open_y_id = extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"];
+    const mouth_open_speed = extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"];
+    const mouth_time_per_character = extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]
+
+    is_talking[character] = true;
+    let startTime = Date.now();
+    const duration = text.length * mouth_time_per_character;
+    let turns = 0;
+    let mouth_y = 0
+    while ((Date.now() - startTime) < duration) {
+        if (abortTalking[character]) {
+            console.debug(DEBUG_PREFIX,"Abort talking requested.")
+            break;
+        }
+
+        // Model destroyed during animation
+        if (model === undefined)
+            break;
+
+        mouth_y = Math.sin((Date.now() - startTime));
+        model.internalModel.coreModel.addParameterValueById(parameter_mouth_open_y_id, mouth_y);
+        //console.debug(DEBUG_PREFIX,"Mouth_y:", mouth_y, "VS",model.internalModel.coreModel.getParameterValueById(parameter_mouth_open_y_id), "remaining time", duration - (Date.now() - startTime));
+        await delay(100 / mouth_open_speed);
+        turns += 1;
+    }
+
+    if (model !== undefined)
+        model.internalModel.coreModel.addParameterValueById(parameter_mouth_open_y_id, -100); // close mouth
+    is_talking[character] = false;
+}
+
+async function playMessage(chat_id) {
+    const character = getContext().chat[chat_id].name;
+
+    // No model for user or system
+    if (getContext().chat[chat_id].is_user || getContext().chat[chat_id].is_system)
+        return;
+   
+    const message = getContext().chat[chat_id].mes;
+    playTalk(character, message);
 }

@@ -70,6 +70,9 @@
                                     <!-- Populated by JS -->
                                 </select>
                             </div>
+                            <small>
+                                Click refresh button to reload models list and unload current model.
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -115,6 +118,53 @@
                                 Set the model y coordinate (usefull if dragging is difficult).
                             </small>
                         </div>
+                    </div>
+                    <div>
+                        <h4>Model Talk</h4>
+                    </div>
+                    <div class="live2d-parameter">
+                        <div class="live2d-parameter-title">
+                            <label for="live2d_param_mouth_open_y_id_select">
+                                Param mouth open Y id
+                            </label>
+                        </div>
+                        <div class="live2d-slider-div">
+                            <select id="live2d_param_mouth_open_y_id_select">
+                                <!-- Populated by JS -->
+                            </select>
+                            <small>
+                                Select parameter corresponding to mouth open Y, example: PARAM_MOUTH_OPEN_Y.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="live2d-parameter">
+                        <div class="live2d-parameter-title">
+                            <label for="live2d_mouth_open_speed">
+                                Mouth movement speed <br/>(<span id="live2d_mouth_open_speed_value"></span>x)
+                            </label>
+                        </div>
+                        <div class="live2d-slider-div">
+                            <input id="live2d_mouth_open_speed" type="range" min="0.1" max="3.0" step="0.1" value="1.0" />
+                            <small>
+                                Mouth movement speed multiplier.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="live2d-parameter">
+                        <div class="live2d-parameter-title">
+                            <label for="live2d_mouth_time_per_character">
+                                Time per character <br/>(<span id="live2d_mouth_time_per_character_value"></span>ms)
+                            </label>
+                        </div>
+                        <div class="live2d-slider-div">
+                            <input id="live2d_mouth_time_per_character" type="range" min="10" max="100" step="1" value="30" />
+                            <small>
+                                Duration of mouth animation for each character of the message.
+                            </small>
+                        </div>
+                    </div>
+                    <div>
+                        <h4>Model Animations</h4>
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">

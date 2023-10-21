@@ -6,7 +6,8 @@ import {
   DEBUG_PREFIX,
   CHARACTER_LIVE2D_FOLDER,
   CLASSIFY_EXPRESSIONS,
-  live2d
+  live2d,
+  TEST_MESSAGE
 } from "./constants.js";
 
 import {
@@ -15,7 +16,8 @@ import {
   removeModel,
   moveModel,
   playExpression,
-  playMotion
+  playMotion,
+  playTalk
 } from "./live2d.js";
 
 export {
@@ -31,6 +33,9 @@ export {
   onModelChange,
   onModelScaleChange,
   onModelCoordChange,
+  onParamMouthOpenIdChange,
+  onMouthOpenSpeedChange,
+  onMouthTimePerCharacterChange,
   onExpressionOverrideChange,
   onMotionOverrideChange,
   onExpressionDefaultChange,
@@ -114,24 +119,30 @@ async function onShowAllCharactersClick() {
   updateCharactersList();
 }
 
-async function onModelScaleChange() {
+async function onCharacterRemoveClick() {
   const character = $("#live2d_character_select").val();
-  const model_path = $("#live2d_model_select").val();
-  extension_settings.live2d.characterModelsSettings[character][model_path]["scale"] = Number($('#live2d_model_scale').val());
-  $("#live2d_model_scale_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
-  saveSettingsDebounced();
-  rescaleModel(character);
-}
 
-async function onModelCoordChange() {
-  const character = $("#live2d_character_select").val();
-  const model_path = $("#live2d_model_select").val();
-  extension_settings.live2d.characterModelsSettings[character][model_path]["x"] = Number($('#live2d_model_x').val());
-  extension_settings.live2d.characterModelsSettings[character][model_path]["y"] = Number($('#live2d_model_y').val());
-  $("#live2d_model_x_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["x"]);
-  $("#live2d_model_y_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
-  saveSettingsDebounced();
-  moveModel(character, extension_settings.live2d.characterModelsSettings[character][model_path]["x"], extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
+  if (character == "none")
+    return;
+
+  let nb_character_models = 0;
+  if (extension_settings.live2d.characterModelsSettings[character] !== undefined)
+    nb_character_models = Object.keys(extension_settings.live2d.characterModelsSettings[character]).length;
+  const template = `<div class="m-b-1">Are you sure you want to remove all live2d model settings for character ${character}? (model settings: ${nb_character_models})</div>`;
+  const confirmation = await callPopup(template, 'confirm');
+
+  if (confirmation) {
+    $("#live2d_model_select").val("none");
+    $("#live2d_model_settings").hide();
+    delete extension_settings.live2d.characterModelMapping[character];
+    delete extension_settings.live2d.characterModelsSettings[character];
+    saveSettingsDebounced();
+    await removeModel(character);
+    console.debug(DEBUG_PREFIX, "Deleted all settings for", character);
+  }
+  else {
+    console.debug(DEBUG_PREFIX, "Connection refused by user");
+  }
 }
 
 async function onModelRefreshClick() {
@@ -159,30 +170,53 @@ async function onModelChange() {
   await loadLive2d();
 }
 
-async function onCharacterRemoveClick() {
+async function onModelScaleChange() {
   const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["scale"] = Number($('#live2d_model_scale').val());
+  $("#live2d_model_scale_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
+  saveSettingsDebounced();
+  rescaleModel(character);
+}
 
-  if (character == "none")
-    return;
+async function onModelCoordChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["x"] = Number($('#live2d_model_x').val());
+  extension_settings.live2d.characterModelsSettings[character][model_path]["y"] = Number($('#live2d_model_y').val());
+  $("#live2d_model_x_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["x"]);
+  $("#live2d_model_y_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
+  saveSettingsDebounced();
+  moveModel(character, extension_settings.live2d.characterModelsSettings[character][model_path]["x"], extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
+}
 
-  let nb_character_models = 0;
-  if (extension_settings.live2d.characterModelsSettings[character] !== undefined)
-    nb_character_models = Object.keys(extension_settings.live2d.characterModelsSettings[character]).length;
-  const template = `<div class="m-b-1">Are you sure you want to remove all live2d model settings for character ${character}? (model settings: ${nb_character_models})</div>`;
-  const confirmation = await callPopup(template, 'confirm');
+async function onParamMouthOpenIdChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"] = $('#live2d_param_mouth_open_y_id_select').val();
+  saveSettingsDebounced();
 
-  if (confirmation) {
-    $("#live2d_model_select").val("none");
-    $("#live2d_model_settings").hide();
-    delete extension_settings.live2d.characterModelMapping[character];
-    delete extension_settings.live2d.characterModelsSettings[character];
-    saveSettingsDebounced();
-    await removeModel(character);
-    console.debug(DEBUG_PREFIX, "Deleted all settings for", character);
-  }
-  else {
-    console.debug(DEBUG_PREFIX, "Connection refused by user");
-  }
+  playTalk(character, TEST_MESSAGE);
+}
+
+async function onMouthOpenSpeedChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"] = Number($('#live2d_mouth_open_speed').val());
+  $("#live2d_mouth_open_speed_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
+  saveSettingsDebounced();
+
+  playTalk(character, TEST_MESSAGE);
+}
+
+async function onMouthTimePerCharacterChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"] = Number($('#live2d_mouth_time_per_character').val());
+  $("#live2d_mouth_time_per_character_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
+  saveSettingsDebounced();
+
+  playTalk(character, TEST_MESSAGE);
 }
 
 async function onExpressionOverrideChange() {
@@ -251,7 +285,12 @@ async function loadModelUi() {
   let model_expressions = model.internalModel.settings.expressions;
   let model_motions = model.internalModel.settings.motions;
   let model_hit_areas = model.internalModel.hitAreas;
+  let model_parameter_ids = model.internalModel.coreModel._model.parameters.ids;
 
+  // Free memory
+  model.destroy(true, true, true);
+
+  // Default values
   if (model_expressions === undefined)
     model_expressions = [];
 
@@ -261,9 +300,16 @@ async function loadModelUi() {
   if (model_hit_areas === undefined)
     model_hit_areas = {};
 
+  if (model_parameter_ids === undefined)
+    model_parameter_ids = [];
+
+  model_expressions.sort();
+  model_parameter_ids.sort();
+
   console.debug(DEBUG_PREFIX, "expressions:", model_expressions);
   console.debug(DEBUG_PREFIX, "motions:", model_motions);
   console.debug(DEBUG_PREFIX, "hit areas:", model_hit_areas);
+  console.debug(DEBUG_PREFIX, "parameter ids:", model_parameter_ids);
 
   // Initialize new model
   if (extension_settings.live2d.characterModelsSettings[character] === undefined)
@@ -275,6 +321,9 @@ async function loadModelUi() {
       "scale": default_scale,
       "x": 0.0,
       "y": 0.0,
+      "param_mouth_open_y_id": "none",
+      "mouth_open_speed": 1.0,
+      "mouth_time_per_character": 30,
       "override": { "expression": "none", "motion": "none" },
       "default": { "expression": "none", "motion": "none" }
     };
@@ -300,6 +349,25 @@ async function loadModelUi() {
   $("#live2d_model_y").val(extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
   $("#live2d_model_y_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
 
+  $("#live2d_mouth_open_speed").val(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
+  $("#live2d_mouth_open_speed_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
+
+  $("#live2d_mouth_time_per_character").val(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
+  $("#live2d_mouth_time_per_character_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
+
+  // Param mouth open Y id candidates
+  $("#live2d_param_mouth_open_y_id_select")
+    .find('option')
+    .remove()
+    .end()
+    .append('<option value="none">Select parameter id</option>');
+
+  for (const i of model_parameter_ids) {
+    $(`#live2d_param_mouth_open_y_id_select`).append(new Option(i, i));
+  }
+  
+  $("#live2d_param_mouth_open_y_id_select").val(extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"]);
+
   // Override expression/motion
   $("#live2d_expression_select_override")
     .find('option')
@@ -315,7 +383,8 @@ async function loadModelUi() {
 
   for (const i of model_expressions) {
     const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
-    $(`#live2d_expression_select_override`).append(new Option(name, name));
+    const file = i[Object.keys(i).find(key => key.toLowerCase() === "file")];
+    $(`#live2d_expression_select_override`).append(new Option(name+" ("+file+")", name));
   }
 
   for (const motion in model_motions) {
@@ -325,7 +394,8 @@ async function loadModelUi() {
     else {
       $(`#live2d_motion_select_override`).append(new Option(motion + " random", motion + "_id=random"));
       for (const motion_id in model_motions[motion]) {
-        $(`#live2d_motion_select_override`).append(new Option(motion + " " + motion_id, motion + "_id=" + motion_id));
+        const file = model_motions[motion][motion_id][Object.keys(model_motions[motion][motion_id]).find(key => key.toLowerCase() === "file")];
+        $(`#live2d_motion_select_override`).append(new Option(motion + " " + motion_id + " ("+file+")", motion + "_id=" + motion_id));
       }
     }
   }
@@ -348,7 +418,8 @@ async function loadModelUi() {
 
   for (const i of model_expressions) {
     const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
-    $(`#live2d_expression_select_default`).append(new Option(name, name));
+    const file = i[Object.keys(i).find(key => key.toLowerCase() === "file")];
+    $(`#live2d_expression_select_default`).append(new Option(name+" ("+file+")", name));
   }
 
   for (const motion in model_motions) {
