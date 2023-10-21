@@ -285,7 +285,12 @@ async function loadModelUi() {
   let model_expressions = model.internalModel.settings.expressions;
   let model_motions = model.internalModel.settings.motions;
   let model_hit_areas = model.internalModel.hitAreas;
-  let model_parameter_ids = model.internalModel.coreModel._model.parameters.ids;
+  let model_parameter_ids = []
+  
+  if (model.internalModel.coreModel._model !== undefined
+    && model.internalModel.coreModel._model.parameters !== undefined
+    && model.internalModel.coreModel._model.parameters.ids !== undefined)
+    model_parameter_ids = model.internalModel.coreModel._model.parameters.ids;
 
   // Free memory
   model.destroy(true, true, true);
