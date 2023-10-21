@@ -1,8 +1,8 @@
 #live2d-canvas{
     background:transparent;
     display: flex;
-    height: calc(100vh - var(--topBarBlockSize));
-    width: 100vw;
+    height: 100dvh;
+    width: 100dvw;
     z-index: 3;
     position: fixed;
     top: 0;

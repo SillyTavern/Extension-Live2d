@@ -14,6 +14,9 @@ DONE:
   - remove case sensitivy to expression name, some model have "name" and "Name" keys
   - UI for user to connect hit area with animations and message
   - Refactored code into seperate files
+  - Group chat mode
+  - button clear all models settings for a character
+  - Coordinate sliders
 
 TODO:
 - Security
@@ -21,14 +24,12 @@ TODO:
   - Resize model on resize window
 - Features
   - Default model click mapping
-  - button clear character mapping / all
   - Play mouth animation when talking (message length dependant)
-  - Group chat mode + demo with konosuba girls
-  - option to delete a model mapping
   - option to detach live2d ui
   - option to hide sprite
   - don't send hit area when moving
   - Cleanup useless imports and comments
+  - Look at speaker option
 */
 import { eventSource, event_types } from "../../../../script.js";
 import { getContext, extension_settings, ModuleWorkerWrapper, modules } from "../../../extensions.js";
@@ -45,12 +46,14 @@ import {
   onFollowCursorClick,
   onAutoSendInteractionClick,
   onShowFramesClick,
-  onModelScaleChange,
   onCharacterChange,
   onCharacterRefreshClick,
+  onCharacterRemoveClick,
   onShowAllCharactersClick,
   onModelRefreshClick,
   onModelChange,
+  onModelScaleChange,
+  onModelCoordChange,
   onExpressionOverrideChange,
   onMotionOverrideChange,
   onExpressionDefaultChange,
@@ -140,19 +143,21 @@ jQuery(async () => {
 
     $("#live2d_character_select").on("change", onCharacterChange);
     $("#live2d_character_refresh_button").on("click", onCharacterRefreshClick);
+    $("#live2d_character_remove").on("click", onCharacterRemoveClick);
     $("#live2d_show_all_characters").on("click", onShowAllCharactersClick);
     
     $("#live2d_model_refresh_button").on("click", onModelRefreshClick);
     $("#live2d_model_select").on("change", onModelChange);
 
     $("#live2d_model_scale").on("input", onModelScaleChange);
+    $("#live2d_model_x").on("input", onModelCoordChange);
+    $("#live2d_model_y").on("input", onModelCoordChange);
 
     $("#live2d_expression_select_override").on("change", onExpressionOverrideChange);
     $("#live2d_motion_select_override").on("change", onMotionOverrideChange);
     
     $("#live2d_expression_select_default").on("change", onExpressionDefaultChange);
     $("#live2d_motion_select_default").on("change", onMotionDefaultChange);
-  
 
     // Module worker
     const wrapper = new ModuleWorkerWrapper(moduleWorker);
@@ -162,8 +167,8 @@ jQuery(async () => {
     // Events
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersList);
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersModels);
-    //eventSource.on(event_types.GROUP_UPDATED, updateCharactersModels);
-    //eventSource.on(event_types.GROUP_UPDATED, updateCharactersList);
+    eventSource.on(event_types.GROUP_UPDATED, updateCharactersList);
+    eventSource.on(event_types.GROUP_UPDATED, updateCharactersModels);
 
     eventSource.on(event_types.MESSAGE_RECEIVED, (chat_id) => updateExpression(chat_id));
     updateCharactersListOnce();
