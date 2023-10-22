@@ -18,12 +18,14 @@ DONE:
   - button clear all models settings for a character
   - Coordinate sliders
   - Play mouth animation when talking (message length dependant)
+  - Added loading live2d model from assets folder
 
 TODO:
 - Security
   - wait before sending interaction message if one is running
   - Resize model on resize window
 - Features
+  - load models from assets folder
   - Default model click mapping
   - starting animation option
   - option to hide sprite per character

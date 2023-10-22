@@ -285,13 +285,8 @@ async function loadModelUi() {
   let model_expressions = model.internalModel.settings.expressions;
   let model_motions = model.internalModel.settings.motions;
   let model_hit_areas = model.internalModel.hitAreas;
-  let model_parameter_ids = []
+  let model_parameter_ids = model.internalModel.coreModel._model?.parameters?.ids ?? []; // Some model have it there
   
-  // Some model have it there
-  if (model.internalModel.coreModel._model?.parameters?.ids !== undefined) {
-    model_parameter_ids = model.internalModel.coreModel._model.parameters.ids;
-  }
-
   // Free memory
   model.destroy(true, true, true);
 
@@ -661,9 +656,19 @@ async function updateCharactersModels(refreshButton = false) {
   else
     chat_members = [context.name2];
 
+  // Assets folder models
+  const assets = await getAssetsLive2dFiles();
+
+  console.debug(DEBUG_PREFIX, "Models from assets folder:",assets["live2d"]);
+
   for (const character of chat_members) {
     if (refreshButton || characters_models[character] === undefined) {
-      characters_models[character] = await getCharacterLive2dFiles(character);
+      const local_models = await getCharacterLive2dFiles(character);
+      characters_models[character] = [];
+      for (const entry of local_models)
+        characters_models[character].push([entry[0]+" (char folder)",entry[1]])
+      for (const entry of assets["live2d"])
+        characters_models[character].push([entry[0]+" (assets folder)",entry[1]])
       console.debug(DEBUG_PREFIX, "Updated models of", character);
     }
   }
@@ -687,6 +692,23 @@ async function updateCharactersListOnce() {
 //#############################//
 //  API Calls                  //
 //#############################//
+
+async function getAssetsLive2dFiles() {
+  console.debug(DEBUG_PREFIX, "getting live2d model json file from assets folder");
+
+  try {
+    const result = await fetch(`/api/assets/get`, {
+      method: 'POST',
+      headers: getRequestHeaders(),
+    });
+    let files = result.ok ? (await result.json()) : [];
+    return files;
+  }
+  catch (err) {
+    console.log(err);
+    return [];
+  }
+}
 
 async function getCharacterLive2dFiles(name) {
   console.debug(DEBUG_PREFIX, "getting live2d model json file for", name);
