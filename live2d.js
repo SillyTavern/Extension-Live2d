@@ -168,8 +168,8 @@ async function loadLive2d(invisible=false) {
     }
     
     $("body").append(canvas);
-    if (invisible)
-        $("#"+CANVAS_ID).hide();
+    //if (invisible)
+    //    $("#"+CANVAS_ID).hide();
 
     app = new PIXI.Application({
         view: document.getElementById(CANVAS_ID),

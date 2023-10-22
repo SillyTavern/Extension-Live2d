@@ -804,8 +804,9 @@ async function playStarterAnimation() {
   }
 
   console.debug(DEBUG_PREFIX,"Starting live2d first time");
-  await loadLive2d(true);
-  await delay(300); // security to avoid model glitch
+  //await loadLive2d(true);
+  await loadLive2d();
+  //await delay(300); // security to avoid model glitch
 
   console.debug(DEBUG_PREFIX,"Playing starters animation");
   for (const character of chat_members) {
@@ -824,6 +825,6 @@ async function playStarterAnimation() {
 
   }
 
-  await delay(300);
-  $("#"+CANVAS_ID).show();
+  //await delay(300);
+  //$("#"+CANVAS_ID).show();
 }
