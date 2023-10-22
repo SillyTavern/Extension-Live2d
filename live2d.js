@@ -20,8 +20,7 @@ export {
     playExpression,
     playMotion,
     playTalk,
-    playMessage,
-    setVisible
+    playMessage
 }
 
 let models = {};
@@ -52,11 +51,11 @@ async function onHitAreasClick(character, hitAreas) {
     
     console.debug(DEBUG_PREFIX,"Selected area:", selected_area);
   
-    const model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][selected_area]["expression"];
-    const model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][selected_area]["motion"];
-    const message = extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][selected_area]["message"];
+    const model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["expression"];
+    const model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["motion"];
+    const message = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["message"];
   
-    console.debug(DEBUG_PREFIX,"Mapping:", extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][selected_area])
+    console.debug(DEBUG_PREFIX,"Mapping:", extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area])
     
     if (message != "") {
       $('#send_textarea').val("") // clear message area to avoid double message
@@ -118,7 +117,7 @@ function showFrames(model) {
     model.addChild(hitAreaFrames);
 }
   
-async function loadLive2d(invisible=false) {
+async function loadLive2d() {
     let model_coord = {}
     console.debug(DEBUG_PREFIX, "Updating live2d app.")
     // 1) Cleanup memory
@@ -168,8 +167,6 @@ async function loadLive2d(invisible=false) {
     }
     
     $("body").append(canvas);
-    //if (invisible)
-    //    $("#"+CANVAS_ID).hide();
 
     app = new PIXI.Application({
         view: document.getElementById(CANVAS_ID),
@@ -192,6 +189,7 @@ async function loadLive2d(invisible=false) {
 
         const model_path = extension_settings.live2d.characterModelMapping[character];
         const model = await live2d.Live2DModel.from(model_path);
+        console.debug(DEBUG_PREFIX,"loaded",model);
         
         /*/ Need to free memory ?
         if (models[character] !== undefined) {
@@ -500,13 +498,4 @@ async function playMessage(chat_id) {
    
     const message = getContext().chat[chat_id].mes;
     playTalk(character, message);
-}
-
-async function setVisible(character, value) {
-    const model = models[character];
-
-    console.debug(DEBUG_PREFIX,model)
-
-    if (model !== undefined)
-        model.visible = value;
 }

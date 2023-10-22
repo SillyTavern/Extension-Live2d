@@ -19,9 +19,13 @@ import {
   moveModel,
   playExpression,
   playMotion,
-  playTalk,
-  setVisible
+  playTalk
 } from "./live2d.js";
+
+import {
+  currentChatMembers,
+  loadAnimationUi
+} from "./utils.js"
 
 export {
   onEnabledClick,
@@ -347,17 +351,17 @@ async function loadModelUi() {
       "mouth_time_per_character": 30,
       "animation_starter": { "expression": "none", "motion": "none" },
       "override": { "expression": "none", "motion": "none" },
-      "default": { "expression": "none", "motion": "none" }
+      "default": { "expression": "none", "motion": "none" },
+      "hit_areas": {},
+      "expressions": {}
     };
 
-    extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"] = {};
     for (const expression of CLASSIFY_EXPRESSIONS) {
       extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression] = { 'expression': 'none', 'motion': 'none' };
     }
 
-    extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"] = {};
     for (const area in model_hit_areas) {
-      extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][area] = { 'expression': 'none', 'motion': 'none', 'message': '' }
+      extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][area] = { 'expression': 'none', 'motion': 'none', 'message': '' }
     }
 
     saveSettingsDebounced();
@@ -391,106 +395,33 @@ async function loadModelUi() {
   $("#live2d_param_mouth_open_y_id_select").val(extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"]);
 
   // Starter expression/motion
-  $("#live2d_animation_starter_expression_select")
-    .find('option')
-    .remove()
-    .end()
-    .append('<option value="none">Select expression</option>');
-
-  $("#live2d_animation_starter_motion_select")
-    .find('option')
-    .remove()
-    .end()
-    .append('<option value="none">Select motion</option>');
-
-  for (const i of model_expressions) {
-    const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
-    const file = i[Object.keys(i).find(key => key.toLowerCase() === "file")];
-    $(`#live2d_animation_starter_expression_select`).append(new Option(name+" ("+file+")", name));
-  }
-
-  for (const motion in model_motions) {
-    if (model_motions[motion].length == 1) {
-      $(`#live2d_animation_starter_motion_select`).append(new Option(motion, motion + "_id=random"));
-    }
-    else {
-      $(`#live2d_animation_starter_motion_select`).append(new Option(motion + " random", motion + "_id=random"));
-      for (const motion_id in model_motions[motion]) {
-        const file = model_motions[motion][motion_id][Object.keys(model_motions[motion][motion_id]).find(key => key.toLowerCase() === "file")];
-        $(`#live2d_animation_starter_motion_select`).append(new Option(motion + " " + motion_id + " ("+file+")", motion + "_id=" + motion_id));
-      }
-    }
-  }
-
-  $(`#live2d_animation_starter_expression_select`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["expression"]);
-  $(`#live2d_animation_starter_motion_select`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"]);
+  loadAnimationUi(
+    model_expressions,
+    model_motions,
+    "live2d_animation_starter_expression_select",
+    "live2d_animation_starter_motion_select",
+    extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["expression"],
+    extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"]);
 
   // Override expression/motion
-  $("#live2d_expression_select_override")
-    .find('option')
-    .remove()
-    .end()
-    .append('<option value="none">Select expression</option>');
-
-  $("#live2d_motion_select_override")
-    .find('option')
-    .remove()
-    .end()
-    .append('<option value="none">Select motion</option>');
-
-  for (const i of model_expressions) {
-    const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
-    const file = i[Object.keys(i).find(key => key.toLowerCase() === "file")];
-    $(`#live2d_expression_select_override`).append(new Option(name+" ("+file+")", name));
-  }
-
-  for (const motion in model_motions) {
-    if (model_motions[motion].length == 1) {
-      $(`#live2d_motion_select_override`).append(new Option(motion, motion + "_id=random"));
-    }
-    else {
-      $(`#live2d_motion_select_override`).append(new Option(motion + " random", motion + "_id=random"));
-      for (const motion_id in model_motions[motion]) {
-        const file = model_motions[motion][motion_id][Object.keys(model_motions[motion][motion_id]).find(key => key.toLowerCase() === "file")];
-        $(`#live2d_motion_select_override`).append(new Option(motion + " " + motion_id + " ("+file+")", motion + "_id=" + motion_id));
-      }
-    }
-  }
-
-  $(`#live2d_expression_select_override`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"]);
-  $(`#live2d_motion_select_override`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"]);
+  loadAnimationUi(
+    model_expressions,
+    model_motions,
+    "live2d_expression_select_override",
+    "live2d_motion_select_override",
+    extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"],
+    extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"]);
 
   // Default expression/motion
-  $("#live2d_expression_select_default")
-    .find('option')
-    .remove()
-    .end()
-    .append('<option value="none">Select expression</option>');
-
-  $("#live2d_motion_select_default")
-    .find('option')
-    .remove()
-    .end()
-    .append('<option value="none">Select motion</option>');
-
-  for (const i of model_expressions) {
-    const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
-    const file = i[Object.keys(i).find(key => key.toLowerCase() === "file")];
-    $(`#live2d_expression_select_default`).append(new Option(name+" ("+file+")", name));
-  }
-
-  for (const motion in model_motions) {
-    $(`#live2d_motion_select_default`).append(new Option(motion + " random", motion + "_id=random"));
-    for (const motion_id in model_motions[motion]) {
-      $(`#live2d_motion_select_default`).append(new Option(motion + " " + motion_id, motion + "_id=" + motion_id));
-    }
-  }
-
-  $(`#live2d_expression_select_default`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["expression"]);
-  $(`#live2d_motion_select_default`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"]);
+  loadAnimationUi(
+    model_expressions,
+    model_motions,
+    "live2d_expression_select_default",
+    "live2d_motion_select_default",
+    extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["expression"],
+    extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"]);
 
   // Hit areas mapping
-  // TODO: factorize
   for (const hit_area in model_hit_areas) {
     hit_areas_ui.append(`
     <div class="live2d-parameter">
@@ -510,27 +441,15 @@ async function loadModelUi() {
     </div>
     `)
 
-    $(`#live2d_hit_area_expression_select_${hit_area}`).append('<option value="none">Select expression</option>');
+    loadAnimationUi(
+      model_expressions,
+      model_motions,
+      `live2d_hit_area_expression_select_${hit_area}`,
+      `live2d_hit_area_motion_select_${hit_area}`,
+      extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][hit_area]["expression"],
+      extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][hit_area]["motion"]);
 
-    for (const i of model_expressions) {
-      const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
-      $(`#live2d_hit_area_expression_select_${hit_area}`).append(new Option(name, name));
-    }
-
-    $(`#live2d_hit_area_motion_select_${hit_area}`)
-      .append('<option value="none">Select motion</option>');
-
-    for (const motion in model_motions) {
-      $(`#live2d_hit_area_motion_select_${hit_area}`).append(new Option(motion + " random", motion + "_id=random"));
-      for (const motion_id in model_motions[motion]) {
-        $(`#live2d_hit_area_motion_select_${hit_area}`).append(new Option(motion + " " + motion_id, motion + "_id=" + motion_id));
-      }
-    }
-
-    // Loading saved settings
-    $(`#live2d_hit_area_expression_select_${hit_area}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][hit_area]["expression"])
-    $(`#live2d_hit_area_motion_select_${hit_area}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][hit_area]["motion"])
-    $(`#live2d_hit_area_message_${hit_area}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["hitAreas"][hit_area]["message"]);
+    $(`#live2d_hit_area_message_${hit_area}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][hit_area]["message"]);
 
     $(`#live2d_hit_area_expression_select_${hit_area}`).on("change", function () { updateHitAreaMapping(hit_area) });
     $(`#live2d_hit_area_motion_select_${hit_area}`).on("change", function () { updateHitAreaMapping(hit_area) });
@@ -555,26 +474,13 @@ async function loadModelUi() {
     </div>
     `)
 
-    $(`#live2d_expression_select_${expression}`).append('<option value="none">Select expression</option>');
-
-    for (const i of model_expressions) {
-      const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
-      $(`#live2d_expression_select_${expression}`).append(new Option(name, name));
-    }
-
-    $(`#live2d_expression_select_${expression}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["expression"])
-
-    $(`#live2d_motion_select_${expression}`)
-      .append('<option value="none">Select motion</option>');
-
-    for (const motion in model_motions) {
-      $(`#live2d_motion_select_${expression}`).append(new Option(motion + " random", motion + "_id=random"));
-      for (const motion_id in model_motions[motion]) {
-        $(`#live2d_motion_select_${expression}`).append(new Option(motion + " " + motion_id, motion + "_id=" + motion_id));
-      }
-    }
-
-    $(`#live2d_motion_select_${expression}`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["motion"])
+    loadAnimationUi(
+      model_expressions,
+      model_motions,
+      `live2d_expression_select_${expression}`,
+      `live2d_motion_select_${expression}`,
+      extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["expression"],
+      extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["motion"]);
 
     $(`#live2d_expression_select_${expression}`).on("change", function () { updateExpressionMapping(expression) });
     $(`#live2d_motion_select_${expression}`).on("change", function () { updateExpressionMapping(expression) });
@@ -591,10 +497,10 @@ async function updateHitAreaMapping(hitArea) {
   const model_motion = $(`#live2d_hit_area_motion_select_${hitArea}`).val();
   const message = $(`#live2d_hit_area_message_${hitArea}`).val();
 
-  extension_settings.live2d.characterModelsSettings[character][model]["hitAreas"][hitArea] = { "expression": model_expression, "motion": model_motion, "message": message };
+  extension_settings.live2d.characterModelsSettings[character][model]["hit_areas"][hitArea] = { "expression": model_expression, "motion": model_motion, "message": message };
   saveSettingsDebounced();
 
-  console.debug(DEBUG_PREFIX, "Updated hit area mapping:", hitArea, extension_settings.live2d.characterModelsSettings[character][model]["hitAreas"][hitArea]);
+  console.debug(DEBUG_PREFIX, "Updated hit area mapping:", hitArea, extension_settings.live2d.characterModelsSettings[character][model]["hit_areas"][hitArea]);
 
   // Play new setting
   if (model_expression != "none")
@@ -634,28 +540,7 @@ function updateCharactersList() {
     return;
 
   if (!extension_settings.live2d.showAllCharacters) {
-    let chat_members = [];
-
-    // group mode
-    if (context.name2 == "") {
-      for (const i of context.groups) {
-        if (i.id == context.groupId) {
-          for (const j of i.members) {
-            let char_name = j.replace(/\.[^/.]+$/, "")
-            if (char_name.includes("default_"))
-              char_name = char_name.substring("default_".length);
-
-            chat_members.push(char_name);
-            console.debug(DEBUG_PREFIX, "New group member:", j.replace(/\.[^/.]+$/, ""))
-          }
-        }
-      }
-    }
-    else
-      chat_members = [context.name2];
-
-    chat_members.sort();
-
+    let chat_members = currentChatMembers();
     console.debug(DEBUG_PREFIX, "Chat members", chat_members)
 
     // Sort group character on top
@@ -690,28 +575,9 @@ function updateCharactersList() {
 
 async function updateCharactersModels(refreshButton = false) {
   const context = getContext();
-  //const character = context.name2; // TODO group chat
-  const is_group = context.groupId !== null;
-  let chat_members = [];
+  let chat_members = currentChatMembers();
 
   console.debug(DEBUG_PREFIX, "Updating models mapping");
-
-  // TODO: replace using group-chat funct
-  if (is_group) {
-    for (const i of context.groups) {
-      if (i.id == context.groupId) {
-        for (const j of i.members) {
-          let char_name = j.replace(/\.[^/.]+$/, "")
-          if (char_name.includes("default_"))
-            char_name = char_name.substring("default_".length);
-
-          chat_members.push(char_name);
-        }
-      }
-    }
-  }
-  else
-    chat_members = [context.name2];
 
   // Assets folder models
   const assets = await getAssetsLive2dFiles();
@@ -732,7 +598,6 @@ async function updateCharactersModels(refreshButton = false) {
 
   console.debug(DEBUG_PREFIX, "Updated models to:", characters_models);
   $("#live2d_character_select").trigger("change");
-  //await loadLive2d();
 }
 
 async function updateCharactersListOnce() {
@@ -783,28 +648,11 @@ async function getCharacterLive2dFiles(name) {
 }
 
 async function playStarterAnimation() {
-  // TODO: factorise
   const context = getContext();
   const group_id = context.groupId;
-  let chat_members = [context.name2];
-
-  if (group_id !== null) {
-      chat_members = [];
-      for(const i of context.groups) {
-          if (i.id == context.groupId) {
-              for(const j of i.members) {
-                  let char_name = j.replace(/\.[^/.]+$/, "")
-                  if (char_name.includes("default_"))
-                      char_name = char_name.substring("default_".length);
-                  
-                  chat_members.push(char_name);
-              }
-          }
-      }
-  }
+  let chat_members = currentChatMembers();
 
   console.debug(DEBUG_PREFIX,"Starting live2d first time");
-  //await loadLive2d(true);
   await loadLive2d();
   //await delay(300); // security to avoid model glitch
 
@@ -822,9 +670,5 @@ async function playStarterAnimation() {
       playExpression(character,starter_animation.expression);
     if (starter_animation.motion != "none")
       playMotion(character, starter_animation.motion);
-
   }
-
-  //await delay(300);
-  //$("#"+CANVAS_ID).show();
 }

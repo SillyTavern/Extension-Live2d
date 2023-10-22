@@ -20,6 +20,7 @@ DONE:
   - Play mouth animation when talking (message length dependant)
   - load models from assets folder
   - starting animation option
+  - factorized the expression/motion selects
 
 TODO:
 - Security
@@ -38,6 +39,8 @@ IDEAS:
   - option to detach live2d ui
   - Look at speaker option
   - Flip Y option
+  - change order of model
+  - hide models before starter animation play? (canvas hidden / model.visible = false make glitch)
 */
 import { eventSource, event_types } from "../../../../script.js";
 import { getContext, extension_settings, ModuleWorkerWrapper, modules } from "../../../extensions.js";
@@ -171,11 +174,14 @@ jQuery(async () => {
     $("#live2d_mouth_open_speed").on("input", onMouthOpenSpeedChange);
     $("#live2d_mouth_time_per_character").on("input", onMouthTimePerCharacterChange);
 
+    $("#live2d_expression_select_override").on("change", onExpressionOverrideChange);
+    $("#live2d_motion_select_override").on("change", onMotionOverrideChange);
+    $("#live2d_animation_override_expression_replay").on("click", onMotionOverrideChange);
+    $("#live2d_animation_override_motion_replay").on("click", onMotionOverrideChange);
+
     $("#live2d_animation_starter_expression_select").on("change", onAnimationStarterChange);
     $("#live2d_animation_starter_motion_select").on("change", onAnimationStarterChange);
 
-    $("#live2d_expression_select_override").on("change", onExpressionOverrideChange);
-    $("#live2d_motion_select_override").on("change", onMotionOverrideChange);
     
     $("#live2d_expression_select_default").on("change", onExpressionDefaultChange);
     $("#live2d_motion_select_default").on("change", onMotionDefaultChange);

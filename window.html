@@ -173,10 +173,20 @@
                             </label>
                         </div>
                         <div class="live2d_expression_select_div" class="live2d-select-div">
-                            <select id="live2d_expression_select_override">
-                            </select>
-                            <select id="live2d_motion_select_override">
-                            </select>
+                            <div class="live2d-select-div">
+                                <select id="live2d_expression_select_override">
+                                </select>
+                                <div id="live2d_animation_override_expression_replay" class="live2d_replay_button menu_button">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </div>
+                            </div>
+                            <div class="live2d-select-div">
+                                <select id="live2d_motion_select_override">
+                                </select>
+                                <div id="live2d_animation_override_motion_replay" class="live2d_replay_button menu_button">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </div>
+                            </div>
                             <small>
                                 Will play now and replace classified animation.
                             </small>
@@ -185,14 +195,24 @@
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
                             <label for="live2d_expression_select_start">
-                                Startin animation
+                                Starter animation
                             </label>
                         </div>
-                        <div class="live2d_expression_select_div" class="live2d-select-div">
-                            <select id="live2d_animation_starter_expression_select">
-                            </select>
-                            <select id="live2d_animation_starter_motion_select">
-                            </select>
+                        <div>
+                            <div class="live2d-select-div">
+                                <select id="live2d_animation_starter_expression_select">
+                                </select>
+                                <div class="live2d_replay_button menu_button">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </div>
+                            </div>
+                            <div class="live2d-select-div">
+                                <select id="live2d_animation_starter_motion_select">
+                                </select>
+                                <div class="live2d_replay_button menu_button">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </div>
+                            </div>
                             <small>
                                 Play when starting a chat with the character.
                             </small>
@@ -205,10 +225,20 @@
                             </label>
                         </div>
                         <div class="live2d_expression_select_div" class="live2d-select-div">
-                            <select id="live2d_expression_select_default">
-                            </select>
-                            <select id="live2d_motion_select_default">
-                            </select>
+                            <div class="live2d-select-div">
+                                <select id="live2d_expression_select_default">
+                                </select>
+                                <div class="live2d_replay_button menu_button">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </div>
+                            </div>
+                            <div class="live2d-select-div">
+                                <select id="live2d_motion_select_default">
+                                </select>
+                                <div class="live2d_replay_button menu_button">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </div>
+                            </div>
                             <small>
                                 Played when classified expression has no mapping set.
                             </small>
