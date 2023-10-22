@@ -18,16 +18,16 @@ DONE:
   - button clear all models settings for a character
   - Coordinate sliders
   - Play mouth animation when talking (message length dependant)
-  - Added loading live2d model from assets folder
+  - load models from assets folder
 
 TODO:
 - Security
   - wait before sending interaction message if one is running
   - Resize model on resize window
 - Features
-  - load models from assets folder
-  - Default model click mapping
   - starting animation option
+  - replay button for animation selection
+  - Default model click mapping
   - option to hide sprite per character
   - don't send hit area when moving
   - Cleanup useless imports and comments
@@ -64,18 +64,21 @@ import {
   onParamMouthOpenIdChange,
   onMouthOpenSpeedChange,
   onMouthTimePerCharacterChange,
+  onAnimationStarterChange,
   onExpressionOverrideChange,
   onMotionOverrideChange,
   onExpressionDefaultChange,
   onMotionDefaultChange,
   updateCharactersModels,
   updateCharactersList,
-  updateCharactersListOnce
+  updateCharactersListOnce,
+  playStarterAnimation
 } from "./ui.js";
 
 import {
   updateExpression,
-  playMessage
+  playMessage,
+  playExpression
 } from "./live2d.js";
 
 const UPDATE_INTERVAL = 1000;
@@ -167,6 +170,9 @@ jQuery(async () => {
     $("#live2d_mouth_open_speed").on("input", onMouthOpenSpeedChange);
     $("#live2d_mouth_time_per_character").on("input", onMouthTimePerCharacterChange);
 
+    $("#live2d_animation_starter_expression_select").on("change", onAnimationStarterChange);
+    $("#live2d_animation_starter_motion_select").on("change", onAnimationStarterChange);
+
     $("#live2d_expression_select_override").on("change", onExpressionOverrideChange);
     $("#live2d_motion_select_override").on("change", onMotionOverrideChange);
     
@@ -181,6 +187,8 @@ jQuery(async () => {
     // Events
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersList);
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersModels);
+    eventSource.on(event_types.CHAT_CHANGED, playStarterAnimation);
+
     eventSource.on(event_types.GROUP_UPDATED, updateCharactersList);
     eventSource.on(event_types.GROUP_UPDATED, updateCharactersModels);
 

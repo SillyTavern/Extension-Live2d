@@ -36,13 +36,15 @@ export {
   onParamMouthOpenIdChange,
   onMouthOpenSpeedChange,
   onMouthTimePerCharacterChange,
+  onAnimationStarterChange,
   onExpressionOverrideChange,
   onMotionOverrideChange,
   onExpressionDefaultChange,
   onMotionDefaultChange,
   updateCharactersModels,
   updateCharactersList,
-  updateCharactersListOnce
+  updateCharactersListOnce,
+  playStarterAnimation
 }
 
 let characters_list = [];
@@ -244,6 +246,22 @@ async function onMotionOverrideChange() {
     playMotion(character, motion_override);
 }
 
+async function onAnimationStarterChange() {
+  const character = $("#live2d_character_select").val();
+  const model_path = $("#live2d_model_select").val();
+  const starter_expression = $("#live2d_animation_starter_expression_select").val();
+  const starter_motion = $("#live2d_animation_starter_motion_select").val();
+
+  extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["expression"] = starter_expression;
+  extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"] = starter_motion;
+  saveSettingsDebounced();
+
+  if (starter_expression != "none")
+    playExpression(character, starter_expression);
+  if (starter_motion != "none")
+    playMotion(character, starter_motion);
+}
+
 async function onExpressionDefaultChange() {
   const character = $("#live2d_character_select").val();
   const model_path = $("#live2d_model_select").val();
@@ -324,6 +342,7 @@ async function loadModelUi() {
       "param_mouth_open_y_id": "none",
       "mouth_open_speed": 1.0,
       "mouth_time_per_character": 30,
+      "animation_starter": { "expression": "none", "motion": "none" },
       "override": { "expression": "none", "motion": "none" },
       "default": { "expression": "none", "motion": "none" }
     };
@@ -367,6 +386,41 @@ async function loadModelUi() {
   }
   
   $("#live2d_param_mouth_open_y_id_select").val(extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"]);
+
+  // Starter expression/motion
+  $("#live2d_animation_starter_expression_select")
+    .find('option')
+    .remove()
+    .end()
+    .append('<option value="none">Select expression</option>');
+
+  $("#live2d_animation_starter_motion_select")
+    .find('option')
+    .remove()
+    .end()
+    .append('<option value="none">Select motion</option>');
+
+  for (const i of model_expressions) {
+    const name = i[Object.keys(i).find(key => key.toLowerCase() === "name")];
+    const file = i[Object.keys(i).find(key => key.toLowerCase() === "file")];
+    $(`#live2d_animation_starter_expression_select`).append(new Option(name+" ("+file+")", name));
+  }
+
+  for (const motion in model_motions) {
+    if (model_motions[motion].length == 1) {
+      $(`#live2d_animation_starter_motion_select`).append(new Option(motion, motion + "_id=random"));
+    }
+    else {
+      $(`#live2d_animation_starter_motion_select`).append(new Option(motion + " random", motion + "_id=random"));
+      for (const motion_id in model_motions[motion]) {
+        const file = model_motions[motion][motion_id][Object.keys(model_motions[motion][motion_id]).find(key => key.toLowerCase() === "file")];
+        $(`#live2d_animation_starter_motion_select`).append(new Option(motion + " " + motion_id + " ("+file+")", motion + "_id=" + motion_id));
+      }
+    }
+  }
+
+  $(`#live2d_animation_starter_expression_select`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["expression"]);
+  $(`#live2d_animation_starter_motion_select`).val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"]);
 
   // Override expression/motion
   $("#live2d_expression_select_override")
@@ -727,3 +781,38 @@ async function getCharacterLive2dFiles(name) {
   }
 }
 
+async function playStarterAnimation() {
+  // TODO: factorise
+  const context = getContext();
+  const group_id = context.groupId;
+  let chat_members = [context.name2];
+
+  if (group_id !== null) {
+      chat_members = [];
+      for(const i of context.groups) {
+          if (i.id == context.groupId) {
+              for(const j of i.members) {
+                  let char_name = j.replace(/\.[^/.]+$/, "")
+                  if (char_name.includes("default_"))
+                      char_name = char_name.substring("default_".length);
+                  
+                  chat_members.push(char_name);
+              }
+          }
+      }
+  }
+
+  for (const character of chat_members) {
+    const model_path = extension_settings.live2d.characterModelMapping[character];
+
+    if (model_path === undefined)
+      continue;
+
+    const starter_animation = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"];
+
+    if (starter_animation.expression != "none")
+      playExpression(character,starter_animation.expression);
+    if (starter_animation.motion != "none")
+      playMotion(character, starter_animation.motion);
+  }
+}
