@@ -7,7 +7,8 @@ import {
   CHARACTER_LIVE2D_FOLDER,
   CLASSIFY_EXPRESSIONS,
   live2d,
-  TEST_MESSAGE
+  TEST_MESSAGE,
+  CANVAS_ID
 } from "./constants.js";
 
 import {
@@ -17,7 +18,8 @@ import {
   moveModel,
   playExpression,
   playMotion,
-  playTalk
+  playTalk,
+  setVisible
 } from "./live2d.js";
 
 export {
@@ -729,17 +731,17 @@ async function updateCharactersModels(refreshButton = false) {
 
   console.debug(DEBUG_PREFIX, "Updated models to:", characters_models);
   $("#live2d_character_select").trigger("change");
-  await loadLive2d();
+  //await loadLive2d();
 }
 
-const delay = s => new Promise(res => setTimeout(res, s * 1000));
+const delay = s => new Promise(res => setTimeout(res, s));
 
 async function updateCharactersListOnce() {
   console.debug(DEBUG_PREFIX, "UDPATING char list", characters_list)
   while (characters_list.length == 0) {
     console.debug(DEBUG_PREFIX, "UDPATING char list")
     updateCharactersList();
-    await delay(1);
+    await delay(1000);
   }
 }
 
@@ -802,6 +804,9 @@ async function playStarterAnimation() {
       }
   }
 
+  console.debug(DEBUG_PREFIX,"Starting live2d first time");
+  await loadLive2d(true);
+
   for (const character of chat_members) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
 
@@ -814,5 +819,9 @@ async function playStarterAnimation() {
       playExpression(character,starter_animation.expression);
     if (starter_animation.motion != "none")
       playMotion(character, starter_animation.motion);
+
   }
+
+  await delay(300);
+  $("#"+CANVAS_ID).show();
 }

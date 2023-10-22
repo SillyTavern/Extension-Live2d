@@ -20,7 +20,8 @@ export {
     playExpression,
     playMotion,
     playTalk,
-    playMessage
+    playMessage,
+    setVisible
 }
 
 let models = {};
@@ -117,7 +118,7 @@ function showFrames(model) {
     model.addChild(hitAreaFrames);
 }
   
-async function loadLive2d() {
+async function loadLive2d(invisible=false) {
     let model_coord = {}
     console.debug(DEBUG_PREFIX, "Updating live2d app.")
     // 1) Cleanup memory
@@ -168,6 +169,8 @@ async function loadLive2d() {
     }
     
     $("body").append(canvas);
+    if (invisible)
+        $("#"+CANVAS_ID).hide();
 
     app = new PIXI.Application({
         view: document.getElementById(CANVAS_ID),
@@ -497,4 +500,13 @@ async function playMessage(chat_id) {
    
     const message = getContext().chat[chat_id].mes;
     playTalk(character, message);
+}
+
+async function setVisible(character, value) {
+    const model = models[character];
+
+    console.debug(DEBUG_PREFIX,model)
+
+    if (model !== undefined)
+        model.visible = value;
 }

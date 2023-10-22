@@ -19,14 +19,15 @@ DONE:
   - Coordinate sliders
   - Play mouth animation when talking (message length dependant)
   - load models from assets folder
+  - starting animation option
 
 TODO:
 - Security
   - wait before sending interaction message if one is running
   - Resize model on resize window
 - Features
-  - starting animation option
   - replay button for animation selection
+  - reset live2d canvas button
   - Default model click mapping
   - option to hide sprite per character
   - don't send hit area when moving
