@@ -8,7 +8,8 @@ import {
   CLASSIFY_EXPRESSIONS,
   live2d,
   TEST_MESSAGE,
-  CANVAS_ID
+  CANVAS_ID,
+  delay
 } from "./constants.js";
 
 import {
@@ -245,7 +246,7 @@ async function onMotionOverrideChange() {
 
   // Play new setting
   if (motion_override != "none")
-    playMotion(character, motion_override);
+    playMotion(character, motion_override, true);
 }
 
 async function onAnimationStarterChange() {
@@ -261,7 +262,7 @@ async function onAnimationStarterChange() {
   if (starter_expression != "none")
     playExpression(character, starter_expression);
   if (starter_motion != "none")
-    playMotion(character, starter_motion);
+    playMotion(character, starter_motion, true);
 }
 
 async function onExpressionDefaultChange() {
@@ -287,7 +288,7 @@ async function onMotionDefaultChange() {
 
   // Play new setting
   if (motion_default != "none")
-    playMotion(character, motion_default);
+    playMotion(character, motion_default, true);
 }
 
 async function loadModelUi() {
@@ -599,7 +600,7 @@ async function updateHitAreaMapping(hitArea) {
   if (model_expression != "none")
     playExpression(character, model_expression);
   if (model_motion != "none")
-    playMotion(character, model_motion);
+    playMotion(character, model_motion, true);
 }
 
 async function updateExpressionMapping(expression) {
@@ -615,7 +616,7 @@ async function updateExpressionMapping(expression) {
   if (model_expression != "none")
     playExpression(character, model_expression);
   if (model_motion != "none")
-    playMotion(character, model_motion);
+    playMotion(character, model_motion, true);
 
   console.debug(DEBUG_PREFIX, "Updated expression mapping:", expression, extension_settings.live2d.characterModelsSettings[character][model]["expressions"][expression]);
 }
@@ -734,8 +735,6 @@ async function updateCharactersModels(refreshButton = false) {
   //await loadLive2d();
 }
 
-const delay = s => new Promise(res => setTimeout(res, s));
-
 async function updateCharactersListOnce() {
   console.debug(DEBUG_PREFIX, "UDPATING char list", characters_list)
   while (characters_list.length == 0) {
@@ -806,7 +805,9 @@ async function playStarterAnimation() {
 
   console.debug(DEBUG_PREFIX,"Starting live2d first time");
   await loadLive2d(true);
+  await delay(300); // security to avoid model glitch
 
+  console.debug(DEBUG_PREFIX,"Playing starters animation");
   for (const character of chat_members) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
 
@@ -814,6 +815,7 @@ async function playStarterAnimation() {
       continue;
 
     const starter_animation = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"];
+    console.debug(DEBUG_PREFIX,"Playing starter animation of",character);
 
     if (starter_animation.expression != "none")
       playExpression(character,starter_animation.expression);

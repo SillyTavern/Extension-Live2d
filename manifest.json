@@ -1,6 +1,6 @@
 {
     "display_name": "Live2d",
-    "loading_order": 14,
+    "loading_order": 15,
     "requires": [],
     "optional": [],
     "js": "index.js",

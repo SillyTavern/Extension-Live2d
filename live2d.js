@@ -147,7 +147,6 @@ async function loadLive2d(invisible=false) {
     var canvas = document.createElement('canvas');
     canvas.id = CANVAS_ID;
 
-
     // TODO: factorise
     const context = getContext();
     const group_id = context.groupId;
@@ -229,7 +228,7 @@ async function loadLive2d(invisible=false) {
         if (extension_settings.live2d.showFrames)
             showFrames(model);
 
-        // Override expression/motion
+        /*/ Override expression/motion
         const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"];
         const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"];
 
@@ -242,7 +241,7 @@ async function loadLive2d(invisible=false) {
             console.debug(DEBUG_PREFIX,"Applying override motion")
             playMotion(character, override_motion);
             console.debug(DEBUG_PREFIX,"Playing override expression", override_motion);
-        }
+        }*/
 
         // handle tapping
         model.on("hit", (hitAreas) => onHitAreasClick(character, hitAreas));
@@ -418,7 +417,7 @@ function playExpression(character, expression) {
     model.expression(expression);
 }
 
-function playMotion(character, motion) {
+function playMotion(character, motion, force=false) {
     if (models[character] === undefined)
         return;
 
@@ -429,7 +428,8 @@ function playMotion(character, motion) {
     const motion_label = motion_label_split[0];
     const motion_id = motion_label_split[1];
     
-    models[character].internalModel.motionManager.stopAllMotions();
+    if (force)
+        models[character].internalModel.motionManager.stopAllMotions();
 
     console.debug(DEBUG_PREFIX,character,"playing motion",motion_label,motion_id);
 
