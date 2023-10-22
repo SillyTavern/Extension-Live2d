@@ -430,12 +430,22 @@ async function loadModelUi() {
               ${hit_area}
             </label>
         </div>
-        <div class="live2d_hit_area_select_div" class="live2d-select-div">
-        <select id="live2d_hit_area_expression_select_${hit_area}">
-        </select>
-        <select id="live2d_hit_area_motion_select_${hit_area}">
-        </select>
-        <textarea id="live2d_hit_area_message_${hit_area}" type="text" class="text_pole textarea_compact" rows="2"
+        <div>
+            <div class="live2d-select-div">
+                <select id="live2d_hit_area_expression_select_${hit_area}">
+                </select>
+                <div id="live2d_hit_area_expression_replay_${hit_area}" class="live2d_replay_button menu_button">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                </div>
+            </div>
+            <div class="live2d-select-div">
+                <select id="live2d_hit_area_motion_select_${hit_area}">
+                </select>
+                <div id="live2d_hit_area_motion_replay_${hit_area}" class="live2d_replay_button menu_button">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                </div>
+            </div>
+            <textarea type="text" class="text_pole textarea_compact" rows="2"
         placeholder="Write message te send when clicking the area."></textarea>
         </div>
     </div>
@@ -454,6 +464,8 @@ async function loadModelUi() {
     $(`#live2d_hit_area_expression_select_${hit_area}`).on("change", function () { updateHitAreaMapping(hit_area) });
     $(`#live2d_hit_area_motion_select_${hit_area}`).on("change", function () { updateHitAreaMapping(hit_area) });
     $(`#live2d_hit_area_message_${hit_area}`).on("change", function () { updateHitAreaMapping(hit_area) });
+    $(`#live2d_hit_area_expression_replay_${hit_area}`).on("click", function () { updateHitAreaMapping(hit_area) });
+    $(`#live2d_hit_area_motion_replay_${hit_area}`).on("click", function () { updateHitAreaMapping(hit_area) });
   }
 
   // Classify expressions mapping
@@ -465,11 +477,21 @@ async function loadModelUi() {
               ${expression}
             </label>
         </div>
-        <div class="live2d_expression_select_div" class="live2d-select-div">
-        <select id="live2d_expression_select_${expression}">
-        </select>
-        <select id="live2d_motion_select_${expression}">
-        </select>
+        <div>
+            <div class="live2d-select-div">
+                <select id="live2d_expression_select_${expression}">
+                </select>
+                <div id="live2d_expression_replay_${expression}" class="live2d_replay_button menu_button">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                </div>
+            </div>
+            <div class="live2d-select-div">
+                <select id="live2d_motion_select_${expression}">
+                </select>
+                <div id="live2d_motion_replay_${expression}" class="live2d_replay_button menu_button">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                </div>
+            </div>
         </div>
     </div>
     `)
@@ -484,6 +506,8 @@ async function loadModelUi() {
 
     $(`#live2d_expression_select_${expression}`).on("change", function () { updateExpressionMapping(expression) });
     $(`#live2d_motion_select_${expression}`).on("change", function () { updateExpressionMapping(expression) });
+    $(`#live2d_expression_replay_${expression}`).on("click", function () { updateExpressionMapping(expression) });
+    $(`#live2d_motion_replay_${expression}`).on("click", function () { updateExpressionMapping(expression) });
   }
 
   $("#live2d_model_settings").show();

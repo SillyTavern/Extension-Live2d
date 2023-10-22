@@ -27,7 +27,7 @@ TODO:
   - wait before sending interaction message if one is running
   - Resize model on resize window
 - Features
-  - replay button for animation selection
+  - replay button for animation selection and factorise playtest
   - reset live2d canvas button
   - Default model click mapping
   - option to hide sprite per character
