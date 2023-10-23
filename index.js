@@ -22,19 +22,23 @@ DONE:
   - starting animation option
   - factorized the expression/motion selects
   - replay button for animation selection and factorise playtest
+  - reset live2d button
+  - Resize model on resize window
+  - update model x/y when drag and drop
+  - Default model click mapping
+  - force reset model for each animation option (usefull for models without a stable state like konosuba game)
+  - refactorise names
+  - wait before sending interaction message if one is running
+  - don't send hit area when moving
+  - Hide sprite of character with active live2d model
 
 TODO:
 - Security
-  - wait before sending interaction message if one is running
-  - Resize model on resize window
 - Features
-  - reset live2d canvas button
-  - Default model click mapping
-  - option to hide sprite per character
-  - don't send hit area when moving
   - Cleanup useless imports and comments
 
 IDEAS:
+  - move event capture ?
   - Synchronize mouth with TTS audio (maybe can make it play through live2d with lip sync)
   - option to detach live2d ui
   - Look at speaker option
@@ -57,17 +61,15 @@ import {
   onFollowCursorClick,
   onAutoSendInteractionClick,
   onShowFramesClick,
+  onForceAnimationClick,
   onCharacterChange,
   onCharacterRefreshClick,
   onCharacterRemoveClick,
-  onShowAllCharactersClick,
   onModelRefreshClick,
   onModelChange,
   onModelScaleChange,
   onModelCoordChange,
-  onParamMouthOpenIdChange,
-  onMouthOpenSpeedChange,
-  onMouthTimePerCharacterChange,
+  onModelMouthChange,
   onAnimationMappingChange,
   updateCharactersModels,
   updateCharactersList,
@@ -78,7 +80,8 @@ import {
 import {
   updateExpression,
   playMessage,
-  playExpression
+  loadLive2d,
+  charactersWithModelLoaded
 } from "./live2d.js";
 
 const UPDATE_INTERVAL = 1000;
@@ -93,6 +96,7 @@ const defaultSettings = {
     enabled: false,
     followCursor: false,
     autoSendInteraction: false,
+    force_animation: false,
 
     // Debug
     showFrames: false,
@@ -111,11 +115,12 @@ function loadSettings() {
         Object.assign(extension_settings.live2d, defaultSettings)
     }
 
-    $("#live2d_enabled").prop('checked', extension_settings.live2d.enabled);
-    $("#live2d_follow_cursor").prop('checked', extension_settings.live2d.followCursor);
-    $("#live2d_auto_send_interaction").prop('checked', extension_settings.live2d.autoSendInteraction);
-    
-    $("#live2d_show_frames").prop('checked', extension_settings.live2d.showFrames);
+    $("#live2d_enabled_checkbox").prop('checked', extension_settings.live2d.enabled);
+    $("#live2d_follow_cursor_checkbox").prop('checked', extension_settings.live2d.followCursor);
+    $("#live2d_auto_send_interaction_checkbox").prop('checked', extension_settings.live2d.autoSendInteraction);
+
+    $("#live2d_force_animation_checkbox").prop('checked', extension_settings.live2d.force_animation);
+    $("#live2d_show_frames_checkbox").prop('checked', extension_settings.live2d.showFrames);
 }
 
 //#############################//
@@ -130,10 +135,29 @@ function loadSettings() {
 
 async function moduleWorker() {
     const moduleEnabled = extension_settings.live2d.enabled;
+    // DBG
+    // Show sprites of character without live2d model
+    const characters_to_hide = charactersWithModelLoaded();
+    const visual_novel_div = $("#visual-novel-wrapper");
 
-    if (moduleEnabled) {
-      // DBG
+    let sprite_divs = $("#visual-novel-wrapper").children();
 
+    // Wait for wrapper to be populated
+    if (sprite_divs.length > 0) {
+      for (const element of sprite_divs) {
+        let to_hide = false;
+        for (const character of characters_to_hide) {
+            if (element["id"].includes(character)) {
+              to_hide = true;
+              element.classList.add("live2d-hidden");
+              break;
+            }
+          }
+          if (!to_hide)
+            element.classList.remove("live2d-hidden");
+        }
+      
+      visual_novel_div.removeClass("live2d-hidden");
     }
 }
 
@@ -149,15 +173,16 @@ jQuery(async () => {
     loadSettings();
 
     // Set user interactions
-    $("#live2d_enabled").on("click", onEnabledClick);
-    $("#live2d_follow_cursor").on("click", onFollowCursorClick);
-    $('#live2d_auto_send_interaction').on("click", onAutoSendInteractionClick);
-    $("#live2d_show_frames").on("click", onShowFramesClick);
+    $("#live2d_enabled_checkbox").on("click", onEnabledClick);
+    $("#live2d_follow_cursor_checkbox").on("click", onFollowCursorClick);
+    $('#live2d_auto_send_interaction_checkbox').on("click", onAutoSendInteractionClick);
+    $("#live2d_force_animation_checkbox").on("click", onForceAnimationClick);
+    $("#live2d_show_frames_checkbox").on("click", onShowFramesClick);
+    $("#live2d_reload_button").on("click", () => {loadLive2d(); console.debug(DEBUG_PREFIX,"Reset clicked, reloading live2d")});
 
     $("#live2d_character_select").on("change", onCharacterChange);
     $("#live2d_character_refresh_button").on("click", onCharacterRefreshClick);
-    $("#live2d_character_remove").on("click", onCharacterRemoveClick);
-    $("#live2d_show_all_characters").on("click", onShowAllCharactersClick);
+    $("#live2d_character_remove_button").on("click", onCharacterRemoveClick);
     
     $("#live2d_model_refresh_button").on("click", onModelRefreshClick);
     $("#live2d_model_select").on("change", onModelChange);
@@ -166,26 +191,32 @@ jQuery(async () => {
     $("#live2d_model_x").on("input", onModelCoordChange);
     $("#live2d_model_y").on("input", onModelCoordChange);
 
-    $("#live2d_param_mouth_open_y_id_select").on("change", onParamMouthOpenIdChange);
-    $("#live2d_mouth_open_speed").on("input", onMouthOpenSpeedChange);
-    $("#live2d_mouth_time_per_character").on("input", onMouthTimePerCharacterChange);
+    $("#live2d_model_param_mouth_open_y_id_select").on("change", onModelMouthChange);
+    $("#live2d_model_mouth_open_speed").on("input", onModelMouthChange);
+    $("#live2d_model_mouth_time_per_character").on("input", onModelMouthChange);
 
-    $("#live2d_expression_select_override").on("change", () => {onAnimationMappingChange("animation_override")});
-    $("#live2d_motion_select_override").on("change", () => {onAnimationMappingChange("animation_override")});
-    $("#live2d_animation_override_expression_replay").on("click", () => {onAnimationMappingChange("animation_override")});
-    $("#live2d_animation_override_motion_replay").on("click", () => {onAnimationMappingChange("animation_override")});
+    $("#live2d_override_expression_select").on("change", () => {onAnimationMappingChange("animation_override")});
+    $("#live2d_override_motion_select").on("change", () => {onAnimationMappingChange("animation_override")});
+    $("#live2d_override_expression_replay_button").on("click", () => {onAnimationMappingChange("animation_override")});
+    $("#live2d_override_motion_replay_button").on("click", () => {onAnimationMappingChange("animation_override")});
 
-    $("#live2d_animation_starter_expression_select").on("change", () => {onAnimationMappingChange("animation_starter")});
-    $("#live2d_animation_starter_motion_select").on("change", () => {onAnimationMappingChange("animation_starter")});
-    $("#live2d_animation_starter_expression_replay").on("click", () => {onAnimationMappingChange("animation_starter")});
-    $("#live2d_animation_starter_motion_replay").on("click", () => {onAnimationMappingChange("animation_starter")});
-    $("#live2d_animation_starter_delay").on("input", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_starter_expression_select").on("change", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_starter_motion_select").on("change", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_starter_expression_replay").on("click", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_starter_motion_replay").on("click", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_starter_delay").on("input", () => {onAnimationMappingChange("animation_starter")});
+
+    $("#live2d_default_expression_select").on("change", () => {onAnimationMappingChange("animation_default")});
+    $("#live2d_default_motion_select").on("change", () => {onAnimationMappingChange("animation_default")});
+    $("#live2d_default_expression_replay").on("click", () => {onAnimationMappingChange("animation_default")});
+    $("#live2d_default_motion_replay").on("click", () => {onAnimationMappingChange("animation_default")});
     
+    $("#live2d_hit_area_default_expression_select").on("change", () => {onAnimationMappingChange("animation_click")});
+    $("#live2d_hit_area_default_motion_select").on("change", () => {onAnimationMappingChange("animation_click")});
+    $("#live2d_hit_area_default_expression_replay").on("click", () => {onAnimationMappingChange("animation_click")});
+    $("#live2d_hit_area_default_motion_replay").on("click", () => {onAnimationMappingChange("animation_click")});
+    $("#live2d_hit_area_default_message").on("change", () => {onAnimationMappingChange("animation_click")});
     
-    $("#live2d_expression_select_default").on("change", () => {onAnimationMappingChange("animation_default")});
-    $("#live2d_motion_select_default").on("change", () => {onAnimationMappingChange("animation_default")});
-    $("#live2d_animation_default_expression_replay").on("click", () => {onAnimationMappingChange("animation_default")});
-    $("#live2d_animation_default_motion_replay").on("click", () => {onAnimationMappingChange("animation_default")});
 
     // Module worker
     const wrapper = new ModuleWorkerWrapper(moduleWorker);
@@ -193,6 +224,8 @@ jQuery(async () => {
     moduleWorker();
 
     // Events
+    window.addEventListener("resize", () => {loadLive2d(); console.debug(DEBUG_PREFIX,"Window resized, reloading live2d")});
+
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersList);
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersModels);
     eventSource.on(event_types.CHAT_CHANGED, playStarterAnimation);

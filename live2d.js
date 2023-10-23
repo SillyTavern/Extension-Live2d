@@ -1,6 +1,6 @@
 
 import { trimToEndSentence, trimToStartSentence } from "../../../utils.js";
-import { getRequestHeaders, sendMessageAsUser } from "../../../../script.js";
+import { getRequestHeaders, saveSettings, saveSettingsDebounced, sendMessageAsUser } from "../../../../script.js";
 import { getContext, extension_settings, getApiUrl, doExtrasFetch, modules } from "../../../extensions.js";
 
 import {
@@ -8,7 +8,9 @@ import {
     live2d,
     FALLBACK_EXPRESSION,
     CANVAS_ID,
-    delay
+    delay,
+    SPRITE_DIV,
+    VN_MODE_DIV
   } from "./constants.js";
 
 export {
@@ -21,18 +23,28 @@ export {
     playMotion,
     playTalk,
     playMessage,
-    setVisible
+    setVisible,
+    charactersWithModelLoaded
 }
 
 let models = {};
 let app = null;
 let is_talking = {}
 let abortTalking = {};
+let previous_interaction = {"character": "", "message": ""};
 
 async function onHitAreasClick(character, hitAreas) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
     const model = models[character];
     const model_hit_areas = model.internalModel.hitAreas;
+    let model_expression;
+    let model_motion;
+    let message;
+
+    if (model.is_dragged) {
+        console.debug(DEBUG_PREFIX,"Model is being dragged cancel hit detection");
+        return;
+    }
   
     console.debug(DEBUG_PREFIX,"Detected click on hit areas:", hitAreas, "of", model.tag);
     console.debug(DEBUG_PREFIX,"Checking priority from:", model_hit_areas);
@@ -40,51 +52,86 @@ async function onHitAreasClick(character, hitAreas) {
     let selected_area;
     let selected_area_priority;
     for (const area in model_hit_areas) {
-      if (!hitAreas.includes(area))
-        continue;
-      console.debug(DEBUG_PREFIX,"Checking",model_hit_areas[area]);
-      if (selected_area === undefined || model_hit_areas[area].index < selected_area_priority) {
-        selected_area = model_hit_areas[area].name;
-        selected_area_priority = model_hit_areas[area].index;
-        console.debug(DEBUG_PREFIX,"higher priority selected",selected_area);
-      }
+        if (!hitAreas.includes(area))
+            continue;
+        console.debug(DEBUG_PREFIX,"Checking",model_hit_areas[area]);
+    
+        // Check area mapping
+        model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][area]["expression"];
+        model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][area]["motion"];
+        message = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][area]["message"];
+
+        if (model_expression == "none" && model_motion == "none" && message == "") {
+            console.debug(DEBUG_PREFIX,"No animation or message mapped, ignored.")
+            continue;
+        }
+
+        if (selected_area === undefined || model_hit_areas[area].index < selected_area_priority) {
+            selected_area = model_hit_areas[area].name;
+            selected_area_priority = model_hit_areas[area].index;
+            console.debug(DEBUG_PREFIX,"higher priority selected",selected_area);
+        }
     }
     
-    console.debug(DEBUG_PREFIX,"Selected area:", selected_area);
-  
-    const model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["expression"];
-    const model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["motion"];
-    const message = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["message"];
-  
-    console.debug(DEBUG_PREFIX,"Mapping:", extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area])
-    
+
+    // No hit area found with mapping, set click mapping
+    if (selected_area === undefined) {
+        console.debug(DEBUG_PREFIX,"No hit area with mapping found, fallback to default click behavior:",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]);
+        model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["expression"];
+        model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["motion"];
+        message = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["message"];
+    }
+    else {
+        console.debug(DEBUG_PREFIX,"Highest priority area with mapping found:", selected_area,extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]);
+        model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["expression"];
+        model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["motion"];
+        message = extension_settings.live2d.characterModelsSettings[character][model_path]["hit_areas"][selected_area]["message"];
+    }
+
     if (message != "") {
-      $('#send_textarea').val("") // clear message area to avoid double message
-      sendMessageAsUser(message);
-      if (extension_settings.live2d.autoSendInteraction)
-        await getContext().generate(); // TODO: check autosend
+        console.debug(DEBUG_PREFIX,getContext());
+        // Same interaction as last message
+        if (getContext().chat[getContext().chat.length-1].is_user && previous_interaction["character"] == character && previous_interaction["message"] == message) {
+            console.debug(DEBUG_PREFIX,"Same as last interaction, nothing done");
+        }
+        else {
+            previous_interaction["character"] = character;
+            previous_interaction["message"] = message;
+
+            $('#send_textarea').val("") // clear message area to avoid double message
+            sendMessageAsUser(message);
+            if (extension_settings.live2d.autoSendInteraction) {
+            getContext().generate();
+            }
+        }
     }
+    else
+        console.debug(DEBUG_PREFIX,"Mapped message empty, nothing to send.");
   
     if (model_expression != "none") {
-      playExpression(character, model_expression);
+      await playExpression(character, model_expression);
       console.debug(DEBUG_PREFIX,"Playing hit area expression", model_expression);
     }
   
     if (model_motion != "none") {
-      const motion_label_split = model_motion.split("_id=")
-      const motion_label = motion_label_split[0];
-      const motion_id = motion_label_split[1];
-  
       //model.internalModel.motionManager.stopAllMotions();
-  
-      if (motion_id == "random")
-        await model.motion(motion_label);
-      else
-        await model.motion(motion_label,motion_id);
-  
-      
+      await playMotion(character,model_motion);
       console.debug(DEBUG_PREFIX,"Playing hit area motion", model_motion);
     }
+}
+
+async function onClick(model, x, y) {
+    const character = model.st_character;
+    const hit_areas = await model.hitTest(x,y);
+    console.debug(DEBUG_PREFIX, "Click areas at",x,y,":",hit_areas);
+
+    // Hit area will handle the click
+    if (hit_areas.length > 0) {
+        console.debug(DEBUG_PREFIX,"Hit areas function will handle the click.");
+        return;
+    }
+    else
+        onHitAreasClick(character,[]); // factorisation: will just play default
 }
   
 function draggable(model) {
@@ -96,12 +143,30 @@ function draggable(model) {
     });
     model.on("pointermove", (e) => {
         if (model.dragging) {
-        model.position.x = e.data.global.x - model._pointerX;
-        model.position.y = e.data.global.y - model._pointerY;
+        const new_x = e.data.global.x - model._pointerX
+        const new_y = e.data.global.y - model._pointerY
+        model.is_dragged = (model.position.x != new_x )|| (model.position.y != new_y);
+        console.debug(DEBUG_PREFIX,"Draging model",model.is_dragged)
+
+        model.position.x = new_x;
+        model.position.y = new_y;
+
+        // Save new center relative location
+        const character = model.st_character;
+        const model_path = model.st_model_path;
+        //console.debug(DEBUG_PREFIX,"Dragging",character,model_path, "to", model.position, "canvas", innerWidth,innerHeight);
+        extension_settings.live2d.characterModelsSettings[character][model_path]["x"] = Math.round(((model.x + (model.width / 2)) - (innerWidth / 2)) / (innerWidth/2/100));
+        extension_settings.live2d.characterModelsSettings[character][model_path]["y"] = Math.round(((model.y + (model.height / 2)) - (innerHeight / 2)) / (innerHeight/2/100));
+        saveSettingsDebounced();
+        $("#live2d_model_x").val(extension_settings.live2d.characterModelsSettings[character][model_path]["x"]);
+        $("#live2d_model_x").val(extension_settings.live2d.characterModelsSettings[character][model_path]["x"]);
+        $("#live2d_model_x_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["x"]);
+        $("#live2d_model_y_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
+        //console.debug(DEBUG_PREFIX,"New offset to center",extension_settings.live2d.characterModelsSettings[character][model_path]["x"],extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
         }
     });
-    model.on("pointerupoutside", () => (model.dragging = false));
-    model.on("pointerup", () => (model.dragging = false));
+    model.on("pointerupoutside", async () => {model.dragging = false; await delay(100); model.is_dragged = false}); // wait to cancel click detection
+    model.on("pointerup", async () => {model.dragging = false; await delay(100); model.is_dragged = false});
 }
   
 function showFrames(model) {
@@ -140,14 +205,22 @@ async function loadLive2d(visible=true) {
         console.debug(DEBUG_PREFIX,"Delete model from memory for", character);
     }
     
-    if (!extension_settings.live2d.enabled)
+    if (!extension_settings.live2d.enabled) {
+        // Show solo chat sprite
+        $("#"+SPRITE_DIV).removeClass("live2d-hidden");
+        $("#"+VN_MODE_DIV).removeClass("live2d-hidden");
         return;
+    }
+
+    // Hide sprite divs
+    $("#"+SPRITE_DIV).addClass("live2d-hidden");
+    $("#"+VN_MODE_DIV).addClass("live2d-hidden");
 
     // Create new canvas and PIXI app
     var canvas = document.createElement('canvas');
     canvas.id = CANVAS_ID;
     if (!visible)
-        canvas.classList.add("live2d-canvas-hidden");
+        canvas.classList.add("live2d-hidden");
     
 
     // TODO: factorise
@@ -193,6 +266,9 @@ async function loadLive2d(visible=true) {
 
         const model_path = extension_settings.live2d.characterModelMapping[character];
         const model = await live2d.Live2DModel.from(model_path);
+        model.st_character = character;
+        model.st_model_path = model_path;
+        model.is_dragged = false;
         console.debug(DEBUG_PREFIX,"loaded",model);
         
         /*/ Need to free memory ?
@@ -220,6 +296,7 @@ async function loadLive2d(visible=true) {
 
         // handle tapping
         model.on("hit", (hitAreas) => onHitAreasClick(character, hitAreas));
+        model.on("click", (e) => onClick(model, e.data.global.x,e.data.global.y))
 
         // Set cursor behavior
         model._autoInteract = extension_settings.live2d.followCursor;
@@ -335,8 +412,8 @@ function moveModel(character, x, y) {
         return;
 
     const model = models[character];
-    model.x = ((innerWidth / 2) - (model.width / 2)) + (innerWidth / 2) * x;
-    model.y = ((innerHeight / 2) - (model.height / 2)) + ((innerHeight / 2)) * y;
+    model.x = ((innerWidth / 2) - (model.width / 2)) + (innerWidth / 2) * x / 100;
+    model.y = ((innerHeight / 2) - (model.height / 2)) + (innerHeight / 2) * y / 100;
 }
 
 async function rescaleModel(character) {
@@ -401,7 +478,7 @@ async function playMotion(character, motion, force=false) {
     console.debug(DEBUG_PREFIX,character,"decoding motion",motion);
     
     // Reset model to force animation
-    if (force) {
+    if (force || extension_settings.live2d.force_animation) {
         console.debug(DEBUG_PREFIX,"force model reloading models");
         await loadLive2d();
         //models[character].internalModel.motionManager.stopAllMotions();
@@ -459,8 +536,10 @@ async function playTalk(character, text) {
         }
 
         // Model destroyed during animation
-        if (model === undefined)
+        if (model?.internalModel?.coreModel === undefined) {
+            console.debug(DEBUG_PREFIX,"Model destroyed during talking animation, abort")
             break;
+        }
 
         mouth_y = Math.sin((Date.now() - startTime));
         model.internalModel.coreModel.addParameterValueById(parameter_mouth_open_y_id, mouth_y);
@@ -469,7 +548,7 @@ async function playTalk(character, text) {
         turns += 1;
     }
 
-    if (model !== undefined)
+    if (model?.internalModel?.coreModel !== undefined)
         model.internalModel.coreModel.addParameterValueById(parameter_mouth_open_y_id, -100); // close mouth
     is_talking[character] = false;
 }
@@ -485,6 +564,10 @@ async function playMessage(chat_id) {
     playTalk(character, message);
 }
 
-function setVisible(character) {
-    $("#"+CANVAS_ID).removeClass("live2d-canvas-hidden");
+function setVisible() {
+    $("#"+CANVAS_ID).removeClass("live2d-hidden");
+}
+
+function charactersWithModelLoaded() {
+    return Object.keys(models);
 }

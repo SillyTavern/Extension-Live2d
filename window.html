@@ -10,27 +10,41 @@
                     <div>
                         <h4>Global Settings</h4>
                     </div>
-                    <label class="checkbox_label" for="live2d_enabled">
-                        <input type="checkbox" id="live2d_enabled" name="live2d_enabled">
+                    <label class="checkbox_label" for="live2d_enabled_checkbox">
+                        <input type="checkbox" id="live2d_enabled_checkbox" name="live2d_enabled_checkbox">
                         <small>Enabled</small>
                     </label>
-                    <label class="checkbox_label" for="live2d_follow_cursor">
-                        <input type="checkbox" id="live2d_follow_cursor" name="live2d_follow_cursor">
+                    <label class="checkbox_label" for="live2d_follow_cursor_checkbox">
+                        <input type="checkbox" id="live2d_follow_cursor_checkbox" name="live2d_follow_cursor_checkbox">
                         <small>Follow cursor</small>
                     </label>
-                    <label class="checkbox_label" for="live2d_auto_send_interaction">
-                        <input type="checkbox" id="live2d_auto_send_interaction" name="live2d_auto_send_interaction">
+                    <label class="checkbox_label" for="live2d_auto_send_interaction_checkbox">
+                        <input type="checkbox" id="live2d_auto_send_interaction_checkbox" name="live2d_auto_send_interaction_checkbox">
                         <small>Auto-send interaction</small>
                     </label>
-                    <label class="checkbox_label" for="live2d_show_frames">
-                        <input type="checkbox" id="live2d_show_frames" name="live2d_show_frames">
-                        <small>Show model frames (debug)</small>
+                    <div>
+                        <h4>Debug Settings</h4>
+                    </div>
+                    <label class="checkbox_label" for="live2d_force_animation_checkbox">
+                        <input type="checkbox" id="live2d_force_animation_checkbox" name="live2d_force_animation_checkbox">
+                        <small>Reset model before animation (allow to spam click)</small>
                     </label>
+                    <label class="checkbox_label" for="live2d_show_frames_checkbox">
+                        <input type="checkbox" id="live2d_show_frames_checkbox" name="live2d_show_frames_checkbox">
+                        <small>Show model frames (usefull from dragging)</small>
+                    </label>
+                    <label class="checkbox_label" for="live2d_reload_button">
+                        <div id="live2d_reload_button" class="menu_button">
+                            <i class="fa fa-refresh" aria-hidden="true"></i>
+                            <!-- Reset button -->
+                        </div>
+                        <small>Click to reload all live2d models (debug)</small>
+                    </label>
+                </div>
+                <div>
                     <div>
                         <h4>Model Mapping</h4>
                     </div>
-                </div>
-                <div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
                             <label for="live2d_character_select">Character:</label>
@@ -44,15 +58,9 @@
                                 <select id="live2d_character_select">
                                     <!-- Populated by JS -->
                                 </select>
-                                <div id="live2d_character_remove" class="menu_button">
+                                <div id="live2d_character_remove_button" class="menu_button">
                                     Remove
                                 </div>
-                            </div>
-                            <div>
-                                <label class="checkbox_label" for="live2d_show_all_characters">
-                                    <input type="checkbox" id="live2d_show_all_characters" name="live2d_show_all_characters">
-                                    <small>Show all characters.</small>
-                                </label>
                             </div>
                         </div>
                     </div>
@@ -96,11 +104,11 @@
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
                             <label for="live2d_model_x">
-                                Model center X offset <br/>(<span id="live2d_model_x_value"></span>x)
+                                Model center X offset <br/>(<span id="live2d_model_x_value"></span>%)
                             </label>
                         </div>
                         <div class="live2d-slider-div">
-                            <input id="live2d_model_x" type="range" min="-2" max="2" step="0.1" value="0.0" />
+                            <input id="live2d_model_x" type="range" min="-100" max="100" step="1" value="0" />
                             <small>
                                 Set the model x coordinate (usefull if dragging is difficult).
                             </small>
@@ -109,11 +117,11 @@
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
                             <label for="live2d_model_y">
-                                Model center Y offset <br/>(<span id="live2d_model_y_value"></span>x)
+                                Model center Y offset <br/>(<span id="live2d_model_y_value"></span>%)
                             </label>
                         </div>
                         <div class="live2d-slider-div">
-                            <input id="live2d_model_y" type="range" min="-2" max="2" step="0.1" value="0.0" />
+                            <input id="live2d_model_y" type="range" min="-100" max="100" step="1" value="0" />
                             <small>
                                 Set the model y coordinate (usefull if dragging is difficult).
                             </small>
@@ -124,12 +132,12 @@
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
-                            <label for="live2d_param_mouth_open_y_id_select">
+                            <label for="live2d_model_param_mouth_open_y_id_select">
                                 Param mouth open Y id
                             </label>
                         </div>
                         <div class="live2d-slider-div">
-                            <select id="live2d_param_mouth_open_y_id_select">
+                            <select id="live2d_model_param_mouth_open_y_id_select">
                                 <!-- Populated by JS -->
                             </select>
                             <small>
@@ -139,12 +147,12 @@
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
-                            <label for="live2d_mouth_open_speed">
-                                Mouth movement speed <br/>(<span id="live2d_mouth_open_speed_value"></span>x)
+                            <label for="live2d_model_mouth_open_speed">
+                                Mouth movement speed <br/>(<span id="live2d_model_mouth_open_speed_value"></span>x)
                             </label>
                         </div>
                         <div class="live2d-slider-div">
-                            <input id="live2d_mouth_open_speed" type="range" min="0.1" max="3.0" step="0.1" value="1.0" />
+                            <input id="live2d_model_mouth_open_speed" type="range" min="0.1" max="3.0" step="0.1" value="1.0" />
                             <small>
                                 Mouth movement speed multiplier.
                             </small>
@@ -152,12 +160,12 @@
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
-                            <label for="live2d_mouth_time_per_character">
-                                Time per character <br/>(<span id="live2d_mouth_time_per_character_value"></span>ms)
+                            <label for="live2d_model_mouth_time_per_character">
+                                Time per character <br/>(<span id="live2d_model_mouth_time_per_character_value"></span>ms)
                             </label>
                         </div>
                         <div class="live2d-slider-div">
-                            <input id="live2d_mouth_time_per_character" type="range" min="10" max="100" step="1" value="30" />
+                            <input id="live2d_model_mouth_time_per_character" type="range" min="10" max="100" step="1" value="30" />
                             <small>
                                 Duration of mouth animation for each character of the message.
                             </small>
@@ -168,22 +176,22 @@
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
-                            <label for="live2d_expression_select_override">
+                            <label for="live2d_override_expression_select">
                                 Override animation
                             </label>
                         </div>
                         <div>
                             <div class="live2d-select-div">
-                                <select id="live2d_expression_select_override">
+                                <select id="live2d_override_expression_select">
                                 </select>
-                                <div id="live2d_animation_override_expression_replay" class="live2d_replay_button menu_button">
+                                <div id="live2d_override_expression_replay_button" class="live2d_replay_button menu_button">
                                     <i class="fa-solid fa-arrow-rotate-left"></i>
                                 </div>
                             </div>
                             <div class="live2d-select-div">
-                                <select id="live2d_motion_select_override">
+                                <select id="live2d_override_motion_select">
                                 </select>
-                                <div id="live2d_animation_override_motion_replay" class="live2d_replay_button menu_button">
+                                <div id="live2d_override_motion_replay_button" class="live2d_replay_button menu_button">
                                     <i class="fa-solid fa-arrow-rotate-left"></i>
                                 </div>
                             </div>
@@ -195,26 +203,26 @@
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
                             <label for="live2d_expression_select_start">
-                                Starter animation <br/>(<span id="live2d_animation_starter_delay_value"></span>ms delay)
+                                Starter animation <br/>(<span id="live2d_starter_delay_value"></span>ms delay)
                             </label>
                         </div>
                         <div>
                             <div class="live2d-select-div">
-                                <select id="live2d_animation_starter_expression_select">
+                                <select id="live2d_starter_expression_select">
                                 </select>
-                                <div id="live2d_animation_starter_expression_replay" class="live2d_replay_button menu_button">
+                                <div id="live2d_starter_expression_replay" class="live2d_replay_button menu_button">
                                     <i class="fa-solid fa-arrow-rotate-left"></i>
                                 </div>
                             </div>
                             <div class="live2d-select-div">
-                                <select id="live2d_animation_starter_motion_select">
+                                <select id="live2d_starter_motion_select">
                                 </select>
-                                <div id="live2d_animation_starter_motion_replay" class="live2d_replay_button menu_button">
+                                <div id="live2d_starter_motion_replay" class="live2d_replay_button menu_button">
                                     <i class="fa-solid fa-arrow-rotate-left"></i>
                                 </div>
                             </div>
                             <div>
-                                <input id="live2d_animation_starter_delay" type="range" min="0" max="1000" step="100" value="0" />
+                                <input id="live2d_starter_delay" type="range" min="0" max="1000" step="100" value="0" />
                             </div>
                             <small>
                                 Play when starting a chat with the character.
@@ -223,22 +231,22 @@
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
-                            <label for="live2d_expression_select_override">
+                            <label for="live2d_override_expression_select">
                                 Default animation
                             </label>
                         </div>
                         <div class="live2d_expression_select_div" class="live2d-select-div">
                             <div class="live2d-select-div">
-                                <select id="live2d_expression_select_default">
+                                <select id="live2d_default_expression_select">
                                 </select>
-                                <div id="live2d_animation_default_expression_replay" class="live2d_replay_button menu_button">
+                                <div id="live2d_default_expression_replay" class="live2d_replay_button menu_button">
                                     <i class="fa-solid fa-arrow-rotate-left"></i>
                                 </div>
                             </div>
                             <div class="live2d-select-div">
-                                <select id="live2d_motion_select_default">
+                                <select id="live2d_default_motion_select">
                                 </select>
-                                <div id="live2d_animation_default_motion_replay" class="live2d_replay_button menu_button">
+                                <div id="live2d_default_motion_replay" class="live2d_replay_button menu_button">
                                     <i class="fa-solid fa-arrow-rotate-left"></i>
                                 </div>
                             </div>
@@ -249,6 +257,34 @@
                     </div>
                     <div>
                         <h4>Hit areas mapping</h4>
+                    </div>
+                    <div class="live2d-parameter">
+                        <div class="live2d-parameter-title">
+                            <label for="live2d_override_expression_select">
+                                Default click animation
+                            </label>
+                        </div>
+                        <div class="live2d_expression_select_div" class="live2d-select-div">
+                            <div class="live2d-select-div">
+                                <select id="live2d_hit_area_default_expression_select">
+                                </select>
+                                <div id="live2d_hit_area_default_expression_replay" class="live2d_replay_button menu_button">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </div>
+                            </div>
+                            <div class="live2d-select-div">
+                                <select id="live2d_hit_area_default_motion_select">
+                                </select>
+                                <div id="live2d_hit_area_default_motion_replay" class="live2d_replay_button menu_button">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </div>
+                            </div>
+                            <textarea id="live2d_hit_area_default_message" type="text" class="text_pole textarea_compact" rows="2"
+        placeholder="Write message te send when clicking the model."></textarea>
+                            <small>
+                                Played when clicking on the model and no hit area captured the click.
+                            </small>
+                        </div>
                     </div>
                     <div id="live2d_hit_areas_mapping">
                     </div>

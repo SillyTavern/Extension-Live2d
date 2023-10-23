@@ -9,7 +9,9 @@ export {
     live2d,
     CANVAS_ID,
     delay,
-    TEST_MESSAGE
+    TEST_MESSAGE,
+    SPRITE_DIV,
+    VN_MODE_DIV
 }
 
 const MODULE_NAME = 'Live2d';
@@ -70,3 +72,5 @@ const CANVAS_ID = "live2d-canvas";
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const TEST_MESSAGE = "TEST MESSAGE: " + new Array(500 + 1).join( "#" );
+const SPRITE_DIV = "expression-wrapper";
+const VN_MODE_DIV = "visual-novel-wrapper";

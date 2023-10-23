@@ -32,18 +32,16 @@ export {
   onEnabledClick,
   onFollowCursorClick,
   onAutoSendInteractionClick,
+  onForceAnimationClick,
   onShowFramesClick,
   onCharacterChange,
   onCharacterRefreshClick,
   onCharacterRemoveClick,
-  onShowAllCharactersClick,
   onModelRefreshClick,
   onModelChange,
   onModelScaleChange,
   onModelCoordChange,
-  onParamMouthOpenIdChange,
-  onMouthOpenSpeedChange,
-  onMouthTimePerCharacterChange,
+  onModelMouthChange,
   onAnimationMappingChange,
   updateCharactersModels,
   updateCharactersList,
@@ -55,26 +53,31 @@ let characters_list = [];
 let characters_models = {};
 
 async function onEnabledClick() {
-  extension_settings.live2d.enabled = $('#live2d_enabled').is(':checked');
+  extension_settings.live2d.enabled = $('#live2d_enabled_checkbox').is(':checked');
   saveSettingsDebounced();
 
   await loadLive2d();
 }
 
 async function onFollowCursorClick() {
-  extension_settings.live2d.followCursor = $('#live2d_follow_cursor').is(':checked');
+  extension_settings.live2d.followCursor = $('#live2d_follow_cursor_checkbox').is(':checked');
   saveSettingsDebounced();
 
   await loadLive2d();
 }
 
 async function onAutoSendInteractionClick() {
-  extension_settings.live2d.autoSendInteraction = $('#live2d_auto_send_interaction').is(':checked');
+  extension_settings.live2d.autoSendInteraction = $('#live2d_auto_send_interaction_checkbox').is(':checked');
+  saveSettingsDebounced();
+}
+
+async function onForceAnimationClick() {
+  extension_settings.live2d.force_animation = $('#live2d_force_animation_checkbox').is(':checked');
   saveSettingsDebounced();
 }
 
 async function onShowFramesClick() {
-  extension_settings.live2d.showFrames = $('#live2d_show_frames').is(':checked');
+  extension_settings.live2d.showFrames = $('#live2d_show_frames_checkbox').is(':checked');
   saveSettingsDebounced();
   await loadLive2d();
 }
@@ -117,12 +120,6 @@ async function onCharacterRefreshClick() {
   updateCharactersList();
   $("#live2d_character_select").val("none");
   $("#live2d_character_select").trigger("change");
-}
-
-async function onShowAllCharactersClick() {
-  extension_settings.live2d.showAllCharacters = $('#live2d_show_all_characters').is(':checked');
-  saveSettingsDebounced();
-  updateCharactersList();
 }
 
 async function onCharacterRemoveClick() {
@@ -196,41 +193,21 @@ async function onModelCoordChange() {
   moveModel(character, extension_settings.live2d.characterModelsSettings[character][model_path]["x"], extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
 }
 
-async function onParamMouthOpenIdChange() {
+async function onModelMouthChange() {
   const character = String($("#live2d_character_select").val());
   const model_path = String($("#live2d_model_select").val());
-  extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"] = $('#live2d_param_mouth_open_y_id_select').val();
-  saveSettingsDebounced();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"] = $('#live2d_model_param_mouth_open_y_id_select').val();
 
+  extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"] = Number($('#live2d_model_mouth_open_speed').val());
+  $("#live2d_model_mouth_open_speed_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
+
+  extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"] = Number($('#live2d_model_mouth_time_per_character').val());
+  $("#live2d_model_mouth_time_per_character_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
+
+  saveSettingsDebounced();
+  
+  await loadLive2d();
   playTalk(character, TEST_MESSAGE);
-}
-
-async function onMouthOpenSpeedChange() {
-  const character = String($("#live2d_character_select").val());
-  const model_path = String($("#live2d_model_select").val());
-  extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"] = Number($('#live2d_mouth_open_speed').val());
-  $("#live2d_mouth_open_speed_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
-  saveSettingsDebounced();
-
-  playTalk(character, TEST_MESSAGE);
-}
-
-async function onMouthTimePerCharacterChange() {
-  const character = String($("#live2d_character_select").val());
-  const model_path = String($("#live2d_model_select").val());
-  extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"] = Number($('#live2d_mouth_time_per_character').val());
-  $("#live2d_mouth_time_per_character_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
-  saveSettingsDebounced();
-
-  playTalk(character, TEST_MESSAGE);
-}
-
-async function onAnimationStarterDelayChange() {
-  const character = String($("#live2d_character_select").val());
-  const model_path = String($("#live2d_model_select").val());
-  $("#live2d_model_scale_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
-  saveSettingsDebounced();
-  rescaleModel(character);
 }
 
 async function onAnimationMappingChange(type) {
@@ -238,37 +215,49 @@ async function onAnimationMappingChange(type) {
   const model_path = String($("#live2d_model_select").val());
   let expression;
   let motion;
+  let message;
 
   switch (type) {
     case "animation_override":
-      expression = $("#live2d_expression_select_override").val();
-      motion = $("#live2d_motion_select_override").val();
+      expression = $("#live2d_override_expression_select").val();
+      motion = $("#live2d_override_motion_select").val();
 
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["expression"] = expression;
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["motion"] = motion;
-      console.debug(DEBUG_PREFIX,"Updated override animation of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]);
+      console.debug(DEBUG_PREFIX,"Updated animation_override of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]);
       break;
 
     case "animation_starter":
-      expression = $("#live2d_animation_starter_expression_select").val();
-      motion = $("#live2d_animation_starter_motion_select").val();
-      const delay = Number($('#live2d_animation_starter_delay').val());
+      expression = $("#live2d_starter_expression_select").val();
+      motion = $("#live2d_starter_motion_select").val();
+      const delay = Number($('#live2d_starter_delay').val());
 
-      $("#live2d_animation_starter_delay_value").text(delay);
+      $("#live2d_starter_delay_value").text(delay);
 
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["expression"] = expression;
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"] = motion;
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"] = delay;
-      console.debug(DEBUG_PREFIX,"Updated override animation of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]);
+      console.debug(DEBUG_PREFIX,"Updated animation_starter of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]);
       break;
 
     case "animation_default":
-      expression = $("#live2d_expression_select_default").val();
-      motion = $("#live2d_motion_select_default").val();
+      expression = $("#live2d_default_expression_select").val();
+      motion = $("#live2d_default_motion_select").val();
 
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_default"]["expression"] = expression;
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_default"]["motion"] = motion;
-      console.debug(DEBUG_PREFIX,"Updated override animation of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_default"]);
+      console.debug(DEBUG_PREFIX,"Updated animation_default of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_default"]);
+      break;
+
+    case "animation_click":
+      expression = $("#live2d_hit_area_default_expression_select").val();
+      motion = $("#live2d_hit_area_default_motion_select").val();
+      message = $("#live2d_hit_area_default_message").val();
+
+      extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["expression"] = expression;
+      extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["motion"] = motion;
+      extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["message"] = message;
+      console.debug(DEBUG_PREFIX,"Updated animation_click of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]);
       break;
 
     default:
@@ -279,9 +268,9 @@ async function onAnimationMappingChange(type) {
   saveSettingsDebounced();
   
   if (expression != "none")
-    playExpression(character, expression);
+    await playExpression(character, expression);
   if (motion != "none")
-    playMotion(character, motion, true);
+    await playMotion(character, motion, true);
 }
 
 async function loadModelUi() {
@@ -341,6 +330,7 @@ async function loadModelUi() {
       "animation_starter": { "expression": "none", "motion": "none", "delay": 0 },
       "animation_override": { "expression": "none", "motion": "none" },
       "animation_default": { "expression": "none", "motion": "none" },
+      "animation_click": { "expression": "none", "motion": "none", "message": "" },
       "hit_areas": {},
       "classify_mapping": {}
     };
@@ -364,42 +354,42 @@ async function loadModelUi() {
   $("#live2d_model_y").val(extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
   $("#live2d_model_y_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
 
-  $("#live2d_mouth_open_speed").val(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
-  $("#live2d_mouth_open_speed_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
+  $("#live2d_model_mouth_open_speed").val(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
+  $("#live2d_model_mouth_open_speed_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
 
-  $("#live2d_mouth_time_per_character").val(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
-  $("#live2d_mouth_time_per_character_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
+  $("#live2d_model_mouth_time_per_character").val(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
+  $("#live2d_model_mouth_time_per_character_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
 
   // Param mouth open Y id candidates
-  $("#live2d_param_mouth_open_y_id_select")
+  $("#live2d_model_param_mouth_open_y_id_select")
     .find('option')
     .remove()
     .end()
     .append('<option value="none">Select parameter id</option>');
 
   for (const i of model_parameter_ids) {
-    $(`#live2d_param_mouth_open_y_id_select`).append(new Option(i, i));
+    $(`#live2d_model_param_mouth_open_y_id_select`).append(new Option(i, i));
   }
   
-  $("#live2d_param_mouth_open_y_id_select").val(extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"]);
+  $("#live2d_model_param_mouth_open_y_id_select").val(extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"]);
 
   // Starter expression/motion
   loadAnimationUi(
     model_expressions,
     model_motions,
-    "live2d_animation_starter_expression_select",
-    "live2d_animation_starter_motion_select",
+    "live2d_starter_expression_select",
+    "live2d_starter_motion_select",
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["expression"],
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"]);
-    $("#live2d_animation_starter_delay").val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
-    $("#live2d_animation_starter_delay_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
+    $("#live2d_starter_delay").val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
+    $("#live2d_starter_delay_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
 
   // Override expression/motion
   loadAnimationUi(
     model_expressions,
     model_motions,
-    "live2d_expression_select_override",
-    "live2d_motion_select_override",
+    "live2d_override_expression_select",
+    "live2d_override_motion_select",
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["expression"],
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["motion"]);
 
@@ -407,11 +397,21 @@ async function loadModelUi() {
   loadAnimationUi(
     model_expressions,
     model_motions,
-    "live2d_expression_select_default",
-    "live2d_motion_select_default",
+    "live2d_default_expression_select",
+    "live2d_default_motion_select",
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_default"]["expression"],
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_default"]["motion"]);
 
+  // Default click animation
+  loadAnimationUi(
+    model_expressions,
+    model_motions,
+    "live2d_hit_area_default_expression_select",
+    "live2d_hit_area_default_motion_select",
+    extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["expression"],
+    extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["motion"]);
+  $("#live2d_hit_area_default_message").val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_click"]["message"]);
+    
   // Hit areas mapping
   for (const hit_area in model_hit_areas) {
     hit_areas_ui.append(`

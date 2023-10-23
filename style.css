@@ -1,5 +1,6 @@
 #live2d-canvas{
     background:transparent;
+    display: flex;
     height: 100dvh;
     width: 100dvw;
     z-index: 3;
@@ -11,17 +12,20 @@
 
 #bg1 {
     z-index: 0;
-    position: fixed;
 }
 
 #visual-novel-wrapper {
     z-index: 1;
-    position: fixed;
 }
 
 #expression-wrapper {
     z-index: 2;
-    position: fixed;
+}
+
+#live2d_reload_button {
+    margin-left: 0.2em;
+    margin-right: 0.2em;
+    padding: 0.35em;
 }
 
 .live2d-character-select-div {
@@ -94,6 +98,6 @@
     padding: 0.2em;
 }
 
-.live2d-canvas-hidden {
+.live2d-hidden {
     visibility: hidden;
 }
