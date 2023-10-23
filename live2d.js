@@ -205,18 +205,6 @@ async function loadLive2d() {
 
         // Scale to canvas
         model.scale.set(scaleY);
-
-        /*/ Set previous coordinates
-        if (model_coord[character] !== undefined) {
-            model.x = model_coord[character].x;
-            model.y = model_coord[character].y;
-        }
-        else { // center of canvas
-            model.x = (innerWidth - model.width) / 2;
-            model.y = 0;
-        }
-        //offset += model.width;
-        */
         
         moveModel(character, extension_settings.live2d.characterModelsSettings[character][model_path]["x"], extension_settings.live2d.characterModelsSettings[character][model_path]["y"]);
 
@@ -225,21 +213,6 @@ async function loadLive2d() {
         // Debug frames
         if (extension_settings.live2d.showFrames)
             showFrames(model);
-
-        /*/ Override expression/motion
-        const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"];
-        const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"];
-
-        if (override_expression != "none") {
-            playExpression(character, override_expression)
-            console.debug(DEBUG_PREFIX,"Playing override expression", override_expression);
-        }
-
-        if (override_motion != "none") {
-            console.debug(DEBUG_PREFIX,"Applying override motion")
-            playMotion(character, override_motion);
-            console.debug(DEBUG_PREFIX,"Playing override expression", override_motion);
-        }*/
 
         // handle tapping
         model.on("hit", (hitAreas) => onHitAreasClick(character, hitAreas));
@@ -255,8 +228,8 @@ async function updateExpression(chat_id) {
     const message = getContext().chat[chat_id];
     const character = message.name;
     const model_path = extension_settings.live2d.characterModelMapping[character];
-    const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["expression"];
-    const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["override"]["motion"]
+    const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["expression"];
+    const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["motion"]
 
     console.debug(DEBUG_PREFIX,"received new message :", message);
 
@@ -269,29 +242,31 @@ async function updateExpression(chat_id) {
     }
 
     const expression = await getExpressionLabel(message.mes);
-    let model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["expression"];
-    let model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["expressions"][expression]["motion"];
+    let model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["classify_mapping"][expression]["expression"];
+    let model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["classify_mapping"][expression]["motion"];
+
+    console.debug(DEBUG_PREFIX,"Detected expression in message:",expression);
 
     // Override animations
     if (override_expression != "none") {
-        console.debug(DEBUG_PREFIX,"Applying override expression")
+        console.debug(DEBUG_PREFIX,"Applying override expression",override_expression)
         model_expression = override_expression;
     }
 
     if (override_motion != "none") {
-        console.debug(DEBUG_PREFIX,"Applying override motion")
+        console.debug(DEBUG_PREFIX,"Applying override motion",override_motion)
         model_motion = override_motion;
     }
 
     // Fallback animations
     if (model_expression == "none") {
-        console.debug(DEBUG_PREFIX,"Expression is none, applying default expression");
-        model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["expression"];
+        console.debug(DEBUG_PREFIX,"Expression is none, applying default expression", model_expression);
+        model_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_default"]["expression"];
     }
 
     if (model_motion == "none") {
-        console.debug(DEBUG_PREFIX,"Motion is none, await loadLive2d();lying default motion");
-        model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["default"]["motion"];
+        console.debug(DEBUG_PREFIX,"Motion is none, playing default motion",model_motion);
+        model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_default"]["motion"];
     }
 
     console.debug(DEBUG_PREFIX,"Playing expression",expression,":", model_expression, model_motion);

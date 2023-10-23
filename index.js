@@ -68,11 +68,7 @@ import {
   onParamMouthOpenIdChange,
   onMouthOpenSpeedChange,
   onMouthTimePerCharacterChange,
-  onAnimationStarterChange,
-  onExpressionOverrideChange,
-  onMotionOverrideChange,
-  onExpressionDefaultChange,
-  onMotionDefaultChange,
+  onAnimationMappingChange,
   updateCharactersModels,
   updateCharactersList,
   updateCharactersListOnce,
@@ -174,17 +170,20 @@ jQuery(async () => {
     $("#live2d_mouth_open_speed").on("input", onMouthOpenSpeedChange);
     $("#live2d_mouth_time_per_character").on("input", onMouthTimePerCharacterChange);
 
-    $("#live2d_expression_select_override").on("change", onExpressionOverrideChange);
-    $("#live2d_motion_select_override").on("change", onMotionOverrideChange);
-    $("#live2d_animation_override_expression_replay").on("click", onMotionOverrideChange);
-    $("#live2d_animation_override_motion_replay").on("click", onMotionOverrideChange);
+    $("#live2d_expression_select_override").on("change", () => {onAnimationMappingChange("animation_override")});
+    $("#live2d_motion_select_override").on("change", () => {onAnimationMappingChange("animation_override")});
+    $("#live2d_animation_override_expression_replay").on("click", () => {onAnimationMappingChange("animation_override")});
+    $("#live2d_animation_override_motion_replay").on("click", () => {onAnimationMappingChange("animation_override")});
 
-    $("#live2d_animation_starter_expression_select").on("change", onAnimationStarterChange);
-    $("#live2d_animation_starter_motion_select").on("change", onAnimationStarterChange);
-
+    $("#live2d_animation_starter_expression_select").on("change", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_animation_starter_motion_select").on("change", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_animation_starter_expression_replay").on("click", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_animation_starter_motion_replay").on("click", () => {onAnimationMappingChange("animation_starter")});
     
-    $("#live2d_expression_select_default").on("change", onExpressionDefaultChange);
-    $("#live2d_motion_select_default").on("change", onMotionDefaultChange);
+    $("#live2d_expression_select_default").on("change", () => {onAnimationMappingChange("animation_default")});
+    $("#live2d_motion_select_default").on("change", () => {onAnimationMappingChange("animation_default")});
+    $("#live2d_animation_default_expression_replay").on("click", () => {onAnimationMappingChange("animation_default")});
+    $("#live2d_animation_default_motion_replay").on("click", () => {onAnimationMappingChange("animation_default")});
 
     // Module worker
     const wrapper = new ModuleWorkerWrapper(moduleWorker);
