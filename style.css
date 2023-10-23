@@ -1,6 +1,5 @@
 #live2d-canvas{
     background:transparent;
-    display: flex;
     height: 100dvh;
     width: 100dvw;
     z-index: 3;
@@ -93,4 +92,8 @@
 
 .live2d-select-div i {
     padding: 0.2em;
+}
+
+.live2d-canvas-hidden {
+    visibility: hidden;
 }

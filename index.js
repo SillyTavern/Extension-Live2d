@@ -21,13 +21,13 @@ DONE:
   - load models from assets folder
   - starting animation option
   - factorized the expression/motion selects
+  - replay button for animation selection and factorise playtest
 
 TODO:
 - Security
   - wait before sending interaction message if one is running
   - Resize model on resize window
 - Features
-  - replay button for animation selection and factorise playtest
   - reset live2d canvas button
   - Default model click mapping
   - option to hide sprite per character
@@ -179,6 +179,8 @@ jQuery(async () => {
     $("#live2d_animation_starter_motion_select").on("change", () => {onAnimationMappingChange("animation_starter")});
     $("#live2d_animation_starter_expression_replay").on("click", () => {onAnimationMappingChange("animation_starter")});
     $("#live2d_animation_starter_motion_replay").on("click", () => {onAnimationMappingChange("animation_starter")});
+    $("#live2d_animation_starter_delay").on("input", () => {onAnimationMappingChange("animation_starter")});
+    
     
     $("#live2d_expression_select_default").on("change", () => {onAnimationMappingChange("animation_default")});
     $("#live2d_motion_select_default").on("change", () => {onAnimationMappingChange("animation_default")});

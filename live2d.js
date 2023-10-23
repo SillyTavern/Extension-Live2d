@@ -20,7 +20,8 @@ export {
     playExpression,
     playMotion,
     playTalk,
-    playMessage
+    playMessage,
+    setVisible
 }
 
 let models = {};
@@ -74,12 +75,12 @@ async function onHitAreasClick(character, hitAreas) {
       const motion_label = motion_label_split[0];
       const motion_id = motion_label_split[1];
   
-      model.internalModel.motionManager.stopAllMotions();
+      //model.internalModel.motionManager.stopAllMotions();
   
       if (motion_id == "random")
-        model.motion(motion_label);
+        await model.motion(motion_label);
       else
-        model.motion(motion_label,motion_id);
+        await model.motion(motion_label,motion_id);
   
       
       console.debug(DEBUG_PREFIX,"Playing hit area motion", model_motion);
@@ -117,7 +118,7 @@ function showFrames(model) {
     model.addChild(hitAreaFrames);
 }
   
-async function loadLive2d() {
+async function loadLive2d(visible=true) {
     let model_coord = {}
     console.debug(DEBUG_PREFIX, "Updating live2d app.")
     // 1) Cleanup memory
@@ -145,6 +146,9 @@ async function loadLive2d() {
     // Create new canvas and PIXI app
     var canvas = document.createElement('canvas');
     canvas.id = CANVAS_ID;
+    if (!visible)
+        canvas.classList.add("live2d-canvas-hidden");
+    
 
     // TODO: factorise
     const context = getContext();
@@ -231,7 +235,7 @@ async function updateExpression(chat_id) {
     const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["expression"];
     const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["motion"]
 
-    console.debug(DEBUG_PREFIX,"received new message :", message);
+    console.debug(DEBUG_PREFIX,"received new message :", message.mes);
 
     if (message.is_user)
         return;
@@ -276,7 +280,7 @@ async function updateExpression(chat_id) {
     }
 
     if (model_motion != "none") {
-        playMotion(character, model_motion);
+        await playMotion(character, model_motion);
     }
 }
   
@@ -381,35 +385,40 @@ function sampleClassifyText(text) {
     return result.trim();
 }
 
-function playExpression(character, expression) {
+async function playExpression(character, expression) {
     if (models[character] === undefined)
         return;
 
     const model = models[character];
     console.debug(DEBUG_PREFIX,character,"playing expression",expression);
-    model.expression(expression);
+    await model.expression(expression);
 }
 
-function playMotion(character, motion, force=false) {
+async function playMotion(character, motion, force=false) {
     if (models[character] === undefined)
         return;
 
     console.debug(DEBUG_PREFIX,character,"decoding motion",motion);
+    
+    // Reset model to force animation
+    if (force) {
+        console.debug(DEBUG_PREFIX,"force model reloading models");
+        await loadLive2d();
+        //models[character].internalModel.motionManager.stopAllMotions();
+    }
 
     const model = models[character];
     const motion_label_split = motion.split("_id=")
     const motion_label = motion_label_split[0];
     const motion_id = motion_label_split[1];
     
-    if (force)
-        models[character].internalModel.motionManager.stopAllMotions();
 
     console.debug(DEBUG_PREFIX,character,"playing motion",motion_label,motion_id);
 
     if (motion_id == "random")
-        model.motion(motion_label);
+        await model.motion(motion_label);
     else
-        model.motion(motion_label,motion_id);
+        await model.motion(motion_label,motion_id);
 }
 
 async function playTalk(character, text) {
@@ -428,6 +437,7 @@ async function playTalk(character, text) {
             await delay(100);
         }
         abortTalking[character] = false;
+        console.debug(DEBUG_PREFIX,"Start new talk");
         //return;
     }
 
@@ -473,4 +483,8 @@ async function playMessage(chat_id) {
    
     const message = getContext().chat[chat_id].mes;
     playTalk(character, message);
+}
+
+function setVisible(character) {
+    $("#"+CANVAS_ID).removeClass("live2d-canvas-hidden");
 }

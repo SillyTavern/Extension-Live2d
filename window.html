@@ -195,7 +195,7 @@
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
                             <label for="live2d_expression_select_start">
-                                Starter animation
+                                Starter animation <br/>(<span id="live2d_animation_starter_delay_value"></span>ms delay)
                             </label>
                         </div>
                         <div>
@@ -212,6 +212,9 @@
                                 <div id="live2d_animation_starter_motion_replay" class="live2d_replay_button menu_button">
                                     <i class="fa-solid fa-arrow-rotate-left"></i>
                                 </div>
+                            </div>
+                            <div>
+                                <input id="live2d_animation_starter_delay" type="range" min="0" max="1000" step="100" value="0" />
                             </div>
                             <small>
                                 Play when starting a chat with the character.

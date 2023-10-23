@@ -19,7 +19,8 @@ import {
   moveModel,
   playExpression,
   playMotion,
-  playTalk
+  playTalk,
+  setVisible
 } from "./live2d.js";
 
 import {
@@ -224,6 +225,14 @@ async function onMouthTimePerCharacterChange() {
   playTalk(character, TEST_MESSAGE);
 }
 
+async function onAnimationStarterDelayChange() {
+  const character = String($("#live2d_character_select").val());
+  const model_path = String($("#live2d_model_select").val());
+  $("#live2d_model_scale_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["scale"]);
+  saveSettingsDebounced();
+  rescaleModel(character);
+}
+
 async function onAnimationMappingChange(type) {
   const character = String($("#live2d_character_select").val());
   const model_path = String($("#live2d_model_select").val());
@@ -243,9 +252,13 @@ async function onAnimationMappingChange(type) {
     case "animation_starter":
       expression = $("#live2d_animation_starter_expression_select").val();
       motion = $("#live2d_animation_starter_motion_select").val();
+      const delay = Number($('#live2d_animation_starter_delay').val());
+
+      $("#live2d_animation_starter_delay_value").text(delay);
 
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["expression"] = expression;
       extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"] = motion;
+      extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"] = delay;
       console.debug(DEBUG_PREFIX,"Updated override animation of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]);
       break;
 
@@ -325,7 +338,7 @@ async function loadModelUi() {
       "param_mouth_open_y_id": "none",
       "mouth_open_speed": 1.0,
       "mouth_time_per_character": 30,
-      "animation_starter": { "expression": "none", "motion": "none" },
+      "animation_starter": { "expression": "none", "motion": "none", "delay": 0 },
       "animation_override": { "expression": "none", "motion": "none" },
       "animation_default": { "expression": "none", "motion": "none" },
       "hit_areas": {},
@@ -378,6 +391,8 @@ async function loadModelUi() {
     "live2d_animation_starter_motion_select",
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["expression"],
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"]);
+    $("#live2d_animation_starter_delay").val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
+    $("#live2d_animation_starter_delay_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
 
   // Override expression/motion
   loadAnimationUi(
@@ -651,9 +666,10 @@ async function playStarterAnimation() {
   const context = getContext();
   const group_id = context.groupId;
   let chat_members = currentChatMembers();
+  let starting_delay = 0;
 
   console.debug(DEBUG_PREFIX,"Starting live2d first time");
-  await loadLive2d();
+  await loadLive2d(false);
   //await delay(300); // security to avoid model glitch
 
   console.debug(DEBUG_PREFIX,"Playing starters animation");
@@ -663,12 +679,19 @@ async function playStarterAnimation() {
     if (model_path === undefined)
       continue;
 
+    starting_delay = Math.max(starting_delay, extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
+
     const starter_animation = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"];
     console.debug(DEBUG_PREFIX,"Playing starter animation of",character);
 
     if (starter_animation.expression != "none")
-      playExpression(character,starter_animation.expression);
+      await playExpression(character,starter_animation.expression);
     if (starter_animation.motion != "none")
-      playMotion(character, starter_animation.motion);
+      await playMotion(character, starter_animation.motion);
   }
+
+  console.debug(DEBUG_PREFIX,"Waiting for max starter delay:",starting_delay);
+  await delay(starting_delay);
+  console.debug(DEBUG_PREFIX,"Make canvas visible");
+  setVisible();
 }
