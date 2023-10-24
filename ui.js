@@ -2,13 +2,11 @@ import { saveSettingsDebounced, getRequestHeaders, callPopup } from "../../../..
 import { getContext, extension_settings, renderExtensionTemplate, } from "../../../extensions.js";
 
 import {
-  MODULE_NAME,
   DEBUG_PREFIX,
   CHARACTER_LIVE2D_FOLDER,
   CLASSIFY_EXPRESSIONS,
   live2d,
   TEST_MESSAGE,
-  CANVAS_ID,
   delay
 } from "./constants.js";
 
@@ -218,15 +216,6 @@ async function onAnimationMappingChange(type) {
   let message;
 
   switch (type) {
-    case "animation_override":
-      expression = $("#live2d_override_expression_select").val();
-      motion = $("#live2d_override_motion_select").val();
-
-      extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["expression"] = expression;
-      extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["motion"] = motion;
-      console.debug(DEBUG_PREFIX,"Updated animation_override of",character,":",extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]);
-      break;
-
     case "animation_starter":
       expression = $("#live2d_starter_expression_select").val();
       motion = $("#live2d_starter_motion_select").val();
@@ -328,7 +317,6 @@ async function loadModelUi() {
       "mouth_open_speed": 1.0,
       "mouth_time_per_character": 30,
       "animation_starter": { "expression": "none", "motion": "none", "delay": 0 },
-      "animation_override": { "expression": "none", "motion": "none" },
       "animation_default": { "expression": "none", "motion": "none" },
       "animation_click": { "expression": "none", "motion": "none", "message": "" },
       "hit_areas": {},
@@ -383,15 +371,6 @@ async function loadModelUi() {
     extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["motion"]);
     $("#live2d_starter_delay").val(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
     $("#live2d_starter_delay_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"]["delay"]);
-
-  // Override expression/motion
-  loadAnimationUi(
-    model_expressions,
-    model_motions,
-    "live2d_override_expression_select",
-    "live2d_override_motion_select",
-    extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["expression"],
-    extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["motion"]);
 
   // Default expression/motion
   loadAnimationUi(

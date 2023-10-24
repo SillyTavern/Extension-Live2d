@@ -101,7 +101,7 @@ async function onHitAreasClick(character, hitAreas) {
             $('#send_textarea').val("") // clear message area to avoid double message
             sendMessageAsUser(message);
             if (extension_settings.live2d.autoSendInteraction) {
-            getContext().generate();
+                await getContext().generate();
             }
         }
     }
@@ -309,8 +309,6 @@ async function updateExpression(chat_id) {
     const message = getContext().chat[chat_id];
     const character = message.name;
     const model_path = extension_settings.live2d.characterModelMapping[character];
-    const override_expression = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["expression"];
-    const override_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_override"]["motion"]
 
     console.debug(DEBUG_PREFIX,"received new message :", message.mes);
 
@@ -327,17 +325,6 @@ async function updateExpression(chat_id) {
     let model_motion = extension_settings.live2d.characterModelsSettings[character][model_path]["classify_mapping"][expression]["motion"];
 
     console.debug(DEBUG_PREFIX,"Detected expression in message:",expression);
-
-    // Override animations
-    if (override_expression != "none") {
-        console.debug(DEBUG_PREFIX,"Applying override expression",override_expression)
-        model_expression = override_expression;
-    }
-
-    if (override_motion != "none") {
-        console.debug(DEBUG_PREFIX,"Applying override motion",override_motion)
-        model_motion = override_motion;
-    }
 
     // Fallback animations
     if (model_expression == "none") {

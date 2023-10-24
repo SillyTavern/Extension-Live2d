@@ -176,35 +176,7 @@
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
-                            <label for="live2d_override_expression_select">
-                                Override animation
-                            </label>
-                        </div>
-                        <div>
-                            <div class="live2d-select-div">
-                                <select id="live2d_override_expression_select">
-                                </select>
-                                <div id="live2d_override_expression_replay_button" class="live2d_replay_button menu_button">
-                                    <i class="fa-solid fa-arrow-rotate-left"></i>
-                                </div>
-                            </div>
-                            <div class="live2d-select-div">
-                                <select id="live2d_override_motion_select">
-                                </select>
-                                <div id="live2d_override_motion_replay_button" class="live2d_replay_button menu_button">
-                                    <i class="fa-solid fa-arrow-rotate-left"></i>
-                                </div>
-                            </div>
-                            <small>
-                                Will play now and replace classified animation.
-                            </small>
-                        </div>
-                    </div>
-                    <div class="live2d-parameter">
-                        <div class="live2d-parameter-title">
-                            <label for="live2d_expression_select_start">
-                                Starter animation <br/>(<span id="live2d_starter_delay_value"></span>ms delay)
-                            </label>
+                            Starter animation <br/>(<span id="live2d_starter_delay_value"></span>ms delay)
                         </div>
                         <div>
                             <div class="live2d-select-div">
@@ -231,9 +203,7 @@
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
-                            <label for="live2d_override_expression_select">
-                                Default animation
-                            </label>
+                            Default Animations
                         </div>
                         <div class="live2d_expression_select_div" class="live2d-select-div">
                             <div class="live2d-select-div">
@@ -260,9 +230,7 @@
                     </div>
                     <div class="live2d-parameter">
                         <div class="live2d-parameter-title">
-                            <label for="live2d_override_expression_select">
-                                Default click animation
-                            </label>
+                            Default click animation
                         </div>
                         <div class="live2d_expression_select_div" class="live2d-select-div">
                             <div class="live2d-select-div">
@@ -280,7 +248,7 @@
                                 </div>
                             </div>
                             <textarea id="live2d_hit_area_default_message" type="text" class="text_pole textarea_compact" rows="2"
-        placeholder="Write message te send when clicking the model."></textarea>
+        placeholder="Message to send when clicking the model. If empty just the animation plays."></textarea>
                             <small>
                                 Played when clicking on the model and no hit area captured the click.
                             </small>
