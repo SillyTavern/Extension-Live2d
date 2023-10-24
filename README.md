@@ -81,9 +81,9 @@ Before you begin, ensure you've met the following prerequisites:
     - Use the slider to change the model vertical position relative to window center.
 
 ### Remarks
-- The settings are saved and carry over different chats.
-- You can also drag the model with your mouse and those settings will be updated and saved.
-- Use those ui settings to bring you model back on screen if you somehow made it out of view. Also check the show frame checkbox to see clearly where you can click to drag the model.
+    - The settings are saved and carry over different chats.
+    - You can also drag the model with your mouse and those settings will be updated and saved.
+    - Use those ui settings to bring you model back on screen if you somehow made it out of view. Also check the show frame checkbox to see clearly where you can click to drag the model.
 
 ## Model Talk
 
@@ -99,7 +99,7 @@ Before you begin, ensure you've met the following prerequisites:
     - Set the time duration of each character, the duration of the animation talk will be this time multiplied by the size of the message.
 
 ### Remarks
-- This mouth animation does not work on every model and every animations. Even if your model has animation where the mouth move does not mean the mouth animation can be controled by this extension. If nothing show in the parameter list your model is probably made with a too old version of live2d to access the parameters properly.
+    - This mouth animation does not work on every model and every animations. Even if your model has animation where the mouth move does not mean the mouth animation can be controled by this extension. If nothing show in the parameter list your model is probably made with a too old version of live2d to access the parameters properly.
 
 ## Model Animations
 
@@ -112,8 +112,8 @@ Before you begin, ensure you've met the following prerequisites:
     - Select and expression and motion from the list that will play when the character send a message. Used a fallback animation when using classify expression extension.
 
 ### Remarks
-    - Animation will play when you select one in the lists.
-    - use the replay button to replay the selected animation.
+- Animation will play when you select one in the lists.
+- use the replay button to replay the selected animation.
 
 ## Hit areas mapping 
 
@@ -126,10 +126,10 @@ Before you begin, ensure you've met the following prerequisites:
     - If the model have hit areas they will be listed and you can assign an animation/message to each of them.
 
 ### Remarks
-- Some model have no hit area but default click is detected for all.
-- Default click will trigger if you click on a hit area with nothing mapped or if clicking outside of any hit area
-- Hit are have priority defined in the model, for example "mouth" is inside "head", if it does not behave properly it's the model file fault.
-- For some model animation need to finish before starting another one, use the debug checkbox if you wanna force the refresh and spam animations.
+    - Some model have no hit area but default click is detected for all.
+    - Default click will trigger if you click on a hit area with nothing mapped or if clicking outside of any hit area
+    - Hit are have priority defined in the model, for example "mouth" is inside "head", if it does not behave properly it's the model file fault.
+    - For some model animation need to finish before starting another one, use the debug checkbox if you wanna force the refresh and spam animations.
 
 ## Classified expressions mapping
 
@@ -143,6 +143,6 @@ Before you begin, ensure you've met the following prerequisites:
     - For each detected emotion by the classify extension you can assign an expression/motion animation.
 
 ### Remarks
-- If the previous animation did not finished when new message is received it's possible the new animation will not play. It's dependant of the live2d model. Use the debug checkbox to force the animation to play.
+    - If the previous animation did not finished when new message is received it's possible the new animation will not play. It's dependant of the live2d model. Use the debug checkbox to force the animation to play.
 
-Thank you for following this guide! Your SillyTavern experience is now enriched with animated and interactive 2d models.
+Thank you for following this guide! Your SillyTavern experience is now enriched with animated and interactive live2d models.
