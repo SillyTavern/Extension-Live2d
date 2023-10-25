@@ -3,23 +3,28 @@
     display: flex;
     height: 100dvh;
     width: 100dvw;
-    z-index: 3;
+    z-index: 4;
     position: fixed;
     top: 0;
     padding: 0;
     margin: 0;
 }
 
-#bg1 {
-    z-index: 0;
-}
-
-#visual-novel-wrapper {
+#bg_custom {
     z-index: 1;
 }
 
-#expression-wrapper {
+
+#bg1 {
+    z-index: 1;
+}
+
+#visual-novel-wrapper {
     z-index: 2;
+}
+
+#expression-wrapper {
+    z-index: 3;
 }
 
 #live2d_reload_button {
