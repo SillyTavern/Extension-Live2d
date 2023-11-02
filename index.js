@@ -46,14 +46,15 @@ IDEAS:
   - Flip Y option
   - change order of model
 */
-import { eventSource, event_types } from "../../../../script.js";
-import { extension_settings, ModuleWorkerWrapper } from "../../../extensions.js";
+import { eventSource, event_types, getCharacters } from "../../../../script.js";
+import { extension_settings, getContext, ModuleWorkerWrapper } from "../../../extensions.js";
 export { MODULE_NAME };
 
 import {
   MODULE_NAME,
   DEBUG_PREFIX,
   extensionFolderPath,
+  SPRITE_DIV
 } from "./constants.js";
 
 import {
@@ -163,6 +164,13 @@ async function moduleWorker() {
       
       visual_novel_div.removeClass("live2d-hidden");
     }
+
+    // Manage solo sprite switch
+    if (!characters_to_hide.includes(getContext().name2))
+      $("#"+SPRITE_DIV).removeClass("live2d-hidden");
+    else
+      $("#"+SPRITE_DIV).addClass("live2d-hidden");
+    
 
     // Force animation looping
     if (extension_settings.live2d.force_loop) {
