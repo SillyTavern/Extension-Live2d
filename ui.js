@@ -32,6 +32,7 @@ export {
   onAutoSendInteractionClick,
   onForceAnimationClick,
   onShowFramesClick,
+  onForceLoopClick,
   onCharacterChange,
   onCharacterRefreshClick,
   onCharacterRemoveClick,
@@ -76,6 +77,12 @@ async function onForceAnimationClick() {
 
 async function onShowFramesClick() {
   extension_settings.live2d.showFrames = $('#live2d_show_frames_checkbox').is(':checked');
+  saveSettingsDebounced();
+  await loadLive2d();
+}
+
+async function onForceLoopClick() {
+  extension_settings.live2d.force_loop = $('#live2d_force_loop_checkbox').is(':checked');
   saveSettingsDebounced();
   await loadLive2d();
 }

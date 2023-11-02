@@ -24,7 +24,8 @@ export {
     playTalk,
     playMessage,
     setVisible,
-    charactersWithModelLoaded
+    charactersWithModelLoaded,
+    forceLoopAnimation
 }
 
 let models = {};
@@ -32,6 +33,7 @@ let app = null;
 let is_talking = {}
 let abortTalking = {};
 let previous_interaction = {"character": "", "message": ""};
+let last_motion = {}
 
 async function onHitAreasClick(character, hitAreas) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
@@ -483,6 +485,8 @@ async function playMotion(character, motion, force=false) {
         await model.motion(motion_label);
     else
         await model.motion(motion_label,motion_id);
+
+    last_motion[character] = motion;
 }
 
 async function playTalk(character, text) {
@@ -557,4 +561,21 @@ function setVisible() {
 
 function charactersWithModelLoaded() {
     return Object.keys(models);
+}
+
+function forceLoopAnimation() {
+    for (const character in models) {
+        const model = models[character]
+        model.internalModel.motionManager.playing
+
+        if (model.internalModel.motionManager.playing) {
+            //console.debug(DEBUG_PREFIX,"Already playing motion wating for looping");
+            continue;
+        }
+
+        if (last_motion[character] !== undefined) {
+            playMotion(character, last_motion[character]);
+            //console.debug(DEBUG_PREFIX,"Force looping of motion",motion);
+        }
+    }
 }

@@ -62,6 +62,7 @@ import {
   onAutoSendInteractionClick,
   onShowFramesClick,
   onForceAnimationClick,
+  onForceLoopClick,
   onCharacterChange,
   onCharacterRefreshClick,
   onCharacterRemoveClick,
@@ -81,10 +82,11 @@ import {
   updateExpression,
   playMessage,
   loadLive2d,
-  charactersWithModelLoaded
+  charactersWithModelLoaded,
+  forceLoopAnimation
 } from "./live2d.js";
 
-const UPDATE_INTERVAL = 1000;
+const UPDATE_INTERVAL = 100;
 
 
 //#############################//s
@@ -96,9 +98,10 @@ const defaultSettings = {
     enabled: false,
     followCursor: false,
     autoSendInteraction: false,
-    force_animation: false,
 
     // Debug
+    force_animation: false,
+    force_loop: false,
     showFrames: false,
 
     // Character model mapping
@@ -120,6 +123,7 @@ function loadSettings() {
     $("#live2d_auto_send_interaction_checkbox").prop('checked', extension_settings.live2d.autoSendInteraction);
 
     $("#live2d_force_animation_checkbox").prop('checked', extension_settings.live2d.force_animation);
+    $("#live2d_force_loop_checkbox").prop('checked', extension_settings.live2d.force_loop);
     $("#live2d_show_frames_checkbox").prop('checked', extension_settings.live2d.showFrames);
 }
 
@@ -159,6 +163,11 @@ async function moduleWorker() {
       
       visual_novel_div.removeClass("live2d-hidden");
     }
+
+    // Force animation looping
+    if (extension_settings.live2d.force_loop) {
+      forceLoopAnimation();
+    }
 }
 
 //#############################//
@@ -178,6 +187,7 @@ jQuery(async () => {
     $('#live2d_auto_send_interaction_checkbox').on("click", onAutoSendInteractionClick);
     $("#live2d_force_animation_checkbox").on("click", onForceAnimationClick);
     $("#live2d_show_frames_checkbox").on("click", onShowFramesClick);
+    $("#live2d_force_loop_checkbox").on("click", onForceLoopClick);
     $("#live2d_reload_button").on("click", () => {loadLive2d(); console.debug(DEBUG_PREFIX,"Reset clicked, reloading live2d")});
 
     $("#live2d_character_select").on("change", onCharacterChange);
