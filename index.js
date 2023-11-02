@@ -166,7 +166,7 @@ async function moduleWorker() {
     }
 
     // Manage solo sprite switch
-    if (!characters_to_hide.includes(getContext().name2))
+    if (!characters_to_hide.includes(getContext().name2) || !extension_settings.live2d.enabled)
       $("#"+SPRITE_DIV).removeClass("live2d-hidden");
     else
       $("#"+SPRITE_DIV).addClass("live2d-hidden");
