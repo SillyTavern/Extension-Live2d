@@ -280,9 +280,20 @@ async function loadLive2d(visible=true) {
             models[character].destroy(true, true, true);
         }*/
 
+        // DBG MONKEY PATCH
+        if (extension_settings.live2d.patch_girls_cafe_gun){
+            model.internalModel.idParamAngleX = "PARAM_BODY_ANGLE_X";
+            model.internalModel.idParamAngleY = "PARAM_BODY_ANGLE_Y";
+            model.internalModel.idParamAngleZ = "PARAM_ANGLE_Z";
+            model.internalModel.idParamBodyAngleX = "PARAM_BODY_ANGLE_X";
+            model.internalModel.idParamBreath = "PARAM_BREATH";
+            model.internalModel.idParamEyeBallX = "PARAM_EYE_BALL_X";
+            model.internalModel.idParamEyeBallY = "PARAM_EYE_BALL_Y";
+        }
+
         models[character] = model;
         app.stage.addChild(model);
-
+        
         const scaleY = ((innerHeight) / model.height) * extension_settings.live2d.characterModelsSettings[character][model_path]["scale"];
 
         // Scale to canvas
@@ -301,7 +312,7 @@ async function loadLive2d(visible=true) {
         model.on("click", (e) => onClick(model, e.data.global.x,e.data.global.y))
 
         // Set cursor behavior
-        model._autoInteract = extension_settings.live2d.followCursor;
+        model.autoInteract = extension_settings.live2d.followCursor;
         console.debug(DEBUG_PREFIX, "Finished loading model:", model);
     }
     console.debug(DEBUG_PREFIX, "Models:", models);
