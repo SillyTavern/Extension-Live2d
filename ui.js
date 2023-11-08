@@ -270,10 +270,11 @@ async function onAnimationMappingChange(type) {
 
   saveSettingsDebounced();
   
-  if (expression != "none")
-    await playExpression(character, expression);
   if (motion != "none")
     await playMotion(character, motion, true);
+  
+  if (expression != "none")
+    await playExpression(character, expression);
 }
 
 async function loadModelUi() {
