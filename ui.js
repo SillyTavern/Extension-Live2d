@@ -272,7 +272,7 @@ async function onAnimationMappingChange(type) {
   
   if (motion != "none")
     await playMotion(character, motion, true);
-  
+
   if (expression != "none")
     await playExpression(character, expression);
 }
@@ -512,10 +512,10 @@ async function updateHitAreaMapping(hitArea) {
   console.debug(DEBUG_PREFIX, "Updated hit area mapping:", hitArea, extension_settings.live2d.characterModelsSettings[character][model]["hit_areas"][hitArea]);
 
   // Play new setting
-  if (model_expression != "none")
-    playExpression(character, model_expression);
   if (model_motion != "none")
-    playMotion(character, model_motion, true);
+    await playMotion(character, model_motion, true);
+  if (model_expression != "none")
+  await playExpression(character, model_expression);
 }
 
 async function updateExpressionMapping(expression) {
@@ -528,10 +528,10 @@ async function updateExpressionMapping(expression) {
   saveSettingsDebounced();
 
   // Play new setting
-  if (model_expression != "none")
-    playExpression(character, model_expression);
   if (model_motion != "none")
-    playMotion(character, model_motion, true);
+    await playMotion(character, model_motion, true);
+  if (model_expression != "none")
+    await playExpression(character, model_expression);
 
   console.debug(DEBUG_PREFIX, "Updated expression mapping:", expression, extension_settings.live2d.characterModelsSettings[character][model]["classify_mapping"][expression]);
 }
@@ -678,10 +678,10 @@ async function playStarterAnimation() {
     const starter_animation = extension_settings.live2d.characterModelsSettings[character][model_path]["animation_starter"];
     console.debug(DEBUG_PREFIX,"Playing starter animation of",character);
 
-    if (starter_animation.expression != "none")
-      await playExpression(character,starter_animation.expression);
     if (starter_animation.motion != "none")
       await playMotion(character, starter_animation.motion);
+    if (starter_animation.expression != "none")
+      await playExpression(character,starter_animation.expression);
   }
 
   console.debug(DEBUG_PREFIX,"Waiting for max starter delay:",starting_delay);
