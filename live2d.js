@@ -10,7 +10,8 @@ import {
     CANVAS_ID,
     delay,
     SPRITE_DIV,
-    VN_MODE_DIV
+    VN_MODE_DIV,
+    ID_PARAM_PATCH
   } from "./constants.js";
 
 export {
@@ -34,6 +35,7 @@ let is_talking = {}
 let abortTalking = {};
 let previous_interaction = {"character": "", "message": ""};
 let last_motion = {}
+
 
 async function onHitAreasClick(character, hitAreas) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
@@ -186,7 +188,6 @@ function showFrames(model) {
 }
   
 async function loadLive2d(visible=true) {
-    let model_coord = {}
     console.debug(DEBUG_PREFIX, "Updating live2d app.")
     // 1) Cleanup memory
     // Reset the PIXI app
@@ -201,7 +202,6 @@ async function loadLive2d(visible=true) {
 
     // Delete live2d models from memory
     for (const character in models) {
-        model_coord[character] = {"x": models[character].x, "y": models[character].y}; // save coord
         models[character].destroy(true, true, true);
         delete models[character];
         console.debug(DEBUG_PREFIX,"Delete model from memory for", character);
@@ -273,22 +273,33 @@ async function loadLive2d(visible=true) {
         model.is_dragged = false;
         console.debug(DEBUG_PREFIX,"loaded",model);
         
-        /*/ Need to free memory ?
-        if (models[character] !== undefined) {
-            coord_x = models[character].x;
-            coord_y = models[character].y;
-            models[character].destroy(true, true, true);
-        }*/
+        // Patch basic animations
+        if (model.internalModel !== undefined) {
+            let model_parameter_ids = model.internalModel.coreModel._model?.parameters?.ids ?? [];
 
-        // DBG MONKEY PATCH
-        if (extension_settings.live2d.patch_girls_cafe_gun){
-            model.internalModel.idParamAngleX = "PARAM_BODY_ANGLE_X";
-            model.internalModel.idParamAngleY = "PARAM_BODY_ANGLE_Y";
-            model.internalModel.idParamAngleZ = "PARAM_ANGLE_Z";
-            model.internalModel.idParamBodyAngleX = "PARAM_BODY_ANGLE_X";
-            model.internalModel.idParamBreath = "PARAM_BREATH";
-            model.internalModel.idParamEyeBallX = "PARAM_EYE_BALL_X";
-            model.internalModel.idParamEyeBallY = "PARAM_EYE_BALL_Y";
+            console.debug(DEBUG_PREFIX,"Checking model basic animations parameters:",model_parameter_ids);
+            for (const param in ID_PARAM_PATCH) {
+                let param_id = model.internalModel[param];
+                if (param_id === undefined) {
+                    console.debug(DEBUG_PREFIX,"Parameter does not exist maybe no animation possible for", param);
+                    continue;
+                }
+                if (!model_parameter_ids.includes(param_id)) {
+                    let patched = false;
+                    console.debug(DEBUG_PREFIX,"Parameter not found:",param_id);
+                    for (param_id of ID_PARAM_PATCH[param]){
+                        if(model_parameter_ids.includes(param_id)) {
+                            model.internalModel[param] = param_id
+                            console.debug(DEBUG_PREFIX,"Found alternative param id:",param_id)
+                            patched = true;
+                            break
+                        }
+                    }
+
+                    if (!patched)
+                        console.log(DEBUG_PREFIX,"WARNING, cannot find corresponding parameter for",param);
+                }
+            }
         }
 
         models[character] = model;

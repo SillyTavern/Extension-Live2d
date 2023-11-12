@@ -33,7 +33,6 @@ export {
   onForceAnimationClick,
   onShowFramesClick,
   onForceLoopClick,
-  onMonkeyPatchClick,
   onCharacterChange,
   onCharacterRefreshClick,
   onCharacterRemoveClick,
@@ -84,12 +83,6 @@ async function onShowFramesClick() {
 
 async function onForceLoopClick() {
   extension_settings.live2d.force_loop = $('#live2d_force_loop_checkbox').is(':checked');
-  saveSettingsDebounced();
-  await loadLive2d();
-}
-
-async function onMonkeyPatchClick() {
-  extension_settings.live2d.patch_girls_cafe_gun = $('#live2d_patch_girls_cafe_gun_checkbox').is(':checked');
   saveSettingsDebounced();
   await loadLive2d();
 }

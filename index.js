@@ -62,7 +62,6 @@ import {
   onFollowCursorClick,
   onAutoSendInteractionClick,
   onShowFramesClick,
-  onMonkeyPatchClick,
   onForceAnimationClick,
   onForceLoopClick,
   onCharacterChange,
@@ -128,7 +127,6 @@ function loadSettings() {
     $("#live2d_force_animation_checkbox").prop('checked', extension_settings.live2d.force_animation);
     $("#live2d_force_loop_checkbox").prop('checked', extension_settings.live2d.force_loop);
     $("#live2d_show_frames_checkbox").prop('checked', extension_settings.live2d.showFrames);
-    $("#live2d_patch_girls_cafe_gun_checkbox").prop('checked', extension_settings.live2d.patch_girls_cafe_gun);
 }
 
 //#############################//
@@ -199,7 +197,6 @@ jQuery(async () => {
     $("#live2d_force_animation_checkbox").on("click", onForceAnimationClick);
     $("#live2d_force_loop_checkbox").on("click", onForceLoopClick);
     $("#live2d_show_frames_checkbox").on("click", onShowFramesClick);
-    $("#live2d_patch_girls_cafe_gun_checkbox").on("click", onMonkeyPatchClick);
     $("#live2d_reload_button").on("click", () => {loadLive2d(); console.debug(DEBUG_PREFIX,"Reset clicked, reloading live2d")});
 
     $("#live2d_character_select").on("change", onCharacterChange);

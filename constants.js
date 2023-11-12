@@ -11,7 +11,8 @@ export {
     delay,
     TEST_MESSAGE,
     SPRITE_DIV,
-    VN_MODE_DIV
+    VN_MODE_DIV,
+    ID_PARAM_PATCH
 }
 
 const MODULE_NAME = 'Live2d';
@@ -74,3 +75,15 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 const TEST_MESSAGE = "TEST MESSAGE: " + new Array(500 + 1).join( "#" );
 const SPRITE_DIV = "expression-wrapper";
 const VN_MODE_DIV = "visual-novel-wrapper";
+
+
+// Animations patches
+const ID_PARAM_PATCH = {
+    idParamAngleX : ["PARAM_BODY_ANGLE_X"],
+    idParamAngleY : ["PARAM_BODY_ANGLE_Y"],
+    idParamAngleZ : ["PARAM_ANGLE_Z"],
+    idParamBodyAngleX : ["PARAM_BODY_ANGLE_X"],
+    idParamBreath : ["PARAM_BREATH"],
+    idParamEyeBallX : ["PARAM_EYE_BALL_X"],
+    idParamEyeBallY : ["PARAM_EYE_BALL_Y"]
+}
