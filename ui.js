@@ -106,6 +106,7 @@ async function onCharacterChange() {
 
   if (characters_models[character] !== undefined) {
     for (const i of characters_models[character]) {
+      //console.debug(DEBUG_PREFIX,"DEBUG",i)
       const model_folder = i[0] + " (" + i[1].replace(/^.*[\\\/]/, '') + ")";
       const model_settings_path = i[1];
       $("#live2d_model_select").append(new Option(model_folder, model_settings_path));
@@ -590,10 +591,16 @@ async function updateCharactersModels(refreshButton = false) {
     if (refreshButton || characters_models[character] === undefined) {
       const local_models = await getCharacterLive2dFiles(character);
       characters_models[character] = [];
-      for (const entry of local_models)
-        characters_models[character].push([entry[0]+" (char folder)",entry[1]])
-      for (const entry of assets["live2d"])
-        characters_models[character].push([entry[0]+" (assets folder)",entry[1]])
+      for (const entry of local_models) {
+        let label = entry.replace("assets\\live2d\\","").replaceAll("\\", "/");
+        label = label.substring(0, label.lastIndexOf("/"));
+        characters_models[character].push([label+" (char folder)",entry])
+      }
+      for (const entry of assets["live2d"]) {
+        let label = entry.replace("assets\\live2d\\","").replaceAll("\\", "/");
+        label = label.substring(0, label.lastIndexOf("/"));
+        characters_models[character].push([label+" (assets folder)",entry])
+      }
       console.debug(DEBUG_PREFIX, "Updated models of", character);
     }
   }
