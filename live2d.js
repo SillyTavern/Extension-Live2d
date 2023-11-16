@@ -539,7 +539,17 @@ async function playTalk(character, text) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
     const parameter_mouth_open_y_id = extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"];
     const mouth_open_speed = extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"];
-    const mouth_time_per_character = extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]
+    const mouth_time_per_character = extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"];
+
+    // No mouth parameter set
+    if (parameter_mouth_open_y_id == "none") {
+        return;
+    }
+
+    if (typeof model.internalModel.coreModel.addParameterValueById !== 'function') {
+        console.debug(DEBUG_PREFIX,"Model has no addParameterValueById function cannot animate mouth")
+        return;
+    }
 
     is_talking[character] = true;
     let startTime = Date.now();

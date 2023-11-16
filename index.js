@@ -50,6 +50,7 @@ IDEAS:
 */
 import { eventSource, event_types, getCharacters } from "../../../../script.js";
 import { extension_settings, getContext, ModuleWorkerWrapper } from "../../../extensions.js";
+import { registerSlashCommand } from "../../../slash-commands.js";
 export { MODULE_NAME };
 
 import {
@@ -89,7 +90,9 @@ import {
   playMessage,
   loadLive2d,
   charactersWithModelLoaded,
-  forceLoopAnimation
+  forceLoopAnimation,
+  playMotion,
+  playExpression
 } from "./live2d.js";
 
 const UPDATE_INTERVAL = 100;
@@ -283,5 +286,53 @@ jQuery(async () => {
     updateCharactersListOnce();
     updateCharactersModels();
 
+    registerSlashCommand('live2dexpression', setExpressionSlashCommand, [], '<span class="monospace">(character="characterName" motion="motionGroup_id=motionId")</span> – play live2d model motion (example: /live2dmotion character="Shizuku" motion="tap_body_id=0" /live2dmotion character="Aqua" motion="_id=1"', true, true);
+    registerSlashCommand('live2dmotion', setMotionSlashCommand, [], '<span class="monospace">(character="characterName" expression="expressionName")</span> – play live2d model motion (example: /live2dexpression character="Shizuku" expression="f01" /live2dexpression character="Aqua" expression="Happy"', true, true);
+
     console.debug(DEBUG_PREFIX,"Finish loaded.");
-});
+
+    });
+
+// Example /live2dexpression character="Xixuegi" expression="f01"
+async function setExpressionSlashCommand(args) {
+  if (args["character"] === undefined) {
+    console.log('No character provided');
+    return;
+  }
+
+  if (args["expression"] === undefined) {
+    console.log('No motion provided');
+    return;
+  }
+
+  //console.debug(DEBUG_PREFIX,"command argument",args);
+
+  const character = args["character"].trim();
+  const expression = args["expression"].trim();
+
+  console.debug(DEBUG_PREFIX,"Command expression received for",character,expression)
+
+  await playExpression(character, expression);
+}
+
+// Example /live2dmotion character="Xixuegi" motion="_id=0"
+async function setMotionSlashCommand(args) {
+  if (args["character"] === undefined) {
+    console.log('No character provided');
+    return;
+  }
+
+  if (args["motion"] === undefined) {
+    console.log('No motion provided');
+    return;
+  }
+
+  //console.debug(DEBUG_PREFIX,"command argument",args);
+
+  const character = args["character"].trim();
+  const motion = args["motion"].trim();
+
+  console.debug(DEBUG_PREFIX,"Command motion received for",character,motion)
+
+  await playMotion(character, motion);
+}
