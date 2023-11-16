@@ -103,6 +103,10 @@
     padding: 0.2em;
 }
 
+.live2d-select-div .menu_button {
+    margin-right: 0.2em;
+}
+
 .live2d-hidden {
     visibility: hidden;
 }

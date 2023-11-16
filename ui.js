@@ -7,7 +7,9 @@ import {
   CLASSIFY_EXPRESSIONS,
   live2d,
   TEST_MESSAGE,
-  delay
+  delay,
+  PARAM_MOUTH_OPEN_Y_DEFAULT,
+  ID_PARAM_DEFAULT
 } from "./constants.js";
 
 import {
@@ -23,6 +25,7 @@ import {
 
 import {
   currentChatMembers,
+  loadModelParamUi,
   loadAnimationUi
 } from "./utils.js"
 
@@ -41,6 +44,9 @@ export {
   onModelScaleChange,
   onModelCoordChange,
   onModelMouthChange,
+  onModelParamChange,
+  onModelParamResetClick,
+  onModelParamDeleteClick,
   onAnimationMappingChange,
   updateCharactersModels,
   updateCharactersList,
@@ -202,7 +208,7 @@ async function onModelCoordChange() {
 async function onModelMouthChange() {
   const character = String($("#live2d_character_select").val());
   const model_path = String($("#live2d_model_select").val());
-  extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"] = $('#live2d_model_param_mouth_open_y_id_select').val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"] = $('#live2d_model_param_mouth_open_y_select').val();
 
   extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"] = Number($('#live2d_model_mouth_open_speed').val());
   $("#live2d_model_mouth_open_speed_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_open_speed"]);
@@ -214,6 +220,59 @@ async function onModelMouthChange() {
   
   await loadLive2d();
   playTalk(character, TEST_MESSAGE);
+}
+
+async function onModelParamChange() {
+  const character = String($("#live2d_character_select").val());
+  const model_path = String($("#live2d_model_select").val());
+  extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"]["idParamAngleX"] = $('#live2d_model_param_angle_x_select').val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"]["idParamAngleY"] = $('#live2d_model_param_angle_y_select').val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"]["idParamAngleZ"] = $('#live2d_model_param_angle_z_select').val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"]["idParamBodyAngleX"] = $('#live2d_model_param_body_angle_x_select').val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"]["idParamBreath"] = $('#live2d_model_param_breath_select').val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"]["idParamEyeBallX"] = $('#live2d_model_param_eye_x_select').val();
+  extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"]["idParamEyeBallY"] = $('#live2d_model_param_eye_y_select').val();
+  saveSettingsDebounced();
+  
+  await loadLive2d();
+}
+
+async function onModelParamResetClick(param_select_id, param_id) {
+  const character = String($("#live2d_character_select").val());
+  const model_path = String($("#live2d_model_select").val());
+  const model = await live2d.Live2DModel.from(model_path); // TODO delete
+  const model_parameter_ids = model.internalModel.coreModel._model?.parameters?.ids ?? [];
+  // Free memory
+  model.destroy(true, true, true);
+
+  // Mouth param
+  if (param_id == "ParamMouthOpenY") {
+    loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_mouth_open_y_select", "ParamMouthOpenY", false, true);
+    return;
+  }
+
+  // Cursor param
+  extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"][param_id] = "none";
+  loadModelParamUi(character, model_path, model_parameter_ids, param_select_id, param_id, false, true);
+  saveSettingsDebounced();
+  await loadLive2d();
+}
+
+async function onModelParamDeleteClick(param_select_id, param_id) {
+  const character = String($("#live2d_character_select").val());
+  const model_path = String($("#live2d_model_select").val());
+
+  // Mouth param
+  if (param_id == "ParamMouthOpenY") {
+    extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"] = "none"
+  }
+  else {
+    extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"][param_id] = "none";
+  }
+
+  $(`#${param_select_id}`).val("none");
+  saveSettingsDebounced();
+  await loadLive2d();
 }
 
 async function onAnimationMappingChange(type) {
@@ -287,6 +346,7 @@ async function loadModelUi() {
   let model_motions = model.internalModel.settings.motions;
   let model_hit_areas = model.internalModel.hitAreas;
   let model_parameter_ids = model.internalModel.coreModel._model?.parameters?.ids ?? []; // Some model have it there
+  let user_settings_exists = true;
   
   // Free memory
   model.destroy(true, true, true);
@@ -317,11 +377,21 @@ async function loadModelUi() {
     extension_settings.live2d.characterModelsSettings[character] = {};
 
   if (extension_settings.live2d.characterModelsSettings[character][model_path] === undefined) {
+    user_settings_exists = false;
     const default_scale = 1.0
     extension_settings.live2d.characterModelsSettings[character][model_path] = {
       "scale": default_scale,
       "x": 0.0,
       "y": 0.0,
+      "cursor_param": {
+        "idParamAngleX" : "none",
+        "idParamAngleY" : "none",
+        "idParamAngleZ" : "none",
+        "idParamBodyAngleX" : "none",
+        "idParamBreath" : "none",
+        "idParamEyeBallX" : "none",
+        "idParamEyeBallY" : "none"
+      },
       "param_mouth_open_y_id": "none",
       "mouth_open_speed": 1.0,
       "mouth_time_per_character": 30,
@@ -357,18 +427,39 @@ async function loadModelUi() {
   $("#live2d_model_mouth_time_per_character").val(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
   $("#live2d_model_mouth_time_per_character_value").text(extension_settings.live2d.characterModelsSettings[character][model_path]["mouth_time_per_character"]);
 
-  // Param mouth open Y id candidates
-  $("#live2d_model_param_mouth_open_y_id_select")
+  /*/ Param mouth open Y id candidates
+  $("#live2d_model_param_mouth_open_y_select")
     .find('option')
     .remove()
     .end()
     .append('<option value="none">Select parameter id</option>');
 
   for (const i of model_parameter_ids) {
-    $(`#live2d_model_param_mouth_open_y_id_select`).append(new Option(i, i));
+    $(`#live2d_model_param_mouth_open_y_select`).append(new Option(i, i));
   }
   
-  $("#live2d_model_param_mouth_open_y_id_select").val(extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"]);
+  // Default mouth open Y parameter detection
+  if (!user_settings_exists && extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"] == "none") {
+    console.debug(DEBUG_PREFIX,"First time loading model for this character, searching for mouth open Y parameter")
+    if (model_parameter_ids.includes(PARAM_MOUTH_OPEN_Y_DEFAULT)) {
+      console.debug(DEBUG_PREFIX,"Found default parameter",PARAM_MOUTH_OPEN_Y_DEFAULT)
+      extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"] = PARAM_MOUTH_OPEN_Y_DEFAULT;
+      saveSettingsDebounced();
+    }
+  }
+  
+  $("#live2d_model_param_mouth_open_y_select").val(extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"]);*/
+
+  loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_mouth_open_y_select", "ParamMouthOpenY", user_settings_exists);
+
+  // Mouse tracking parameters
+  loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_angle_x_select", "idParamAngleX", user_settings_exists);
+  loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_angle_y_select", "idParamAngleY", user_settings_exists);
+  loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_angle_z_select", "idParamAngleZ", user_settings_exists);
+  loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_body_angle_x_select", "idParamBodyAngleX", user_settings_exists);
+  loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_breath_select", "idParamBreath", user_settings_exists);
+  loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_eye_x_select", "idParamEyeBallX", user_settings_exists);
+  loadModelParamUi(character, model_path, model_parameter_ids, "live2d_model_param_eye_y_select", "idParamEyeBallY", user_settings_exists);
 
   // Starter expression/motion
   loadAnimationUi(

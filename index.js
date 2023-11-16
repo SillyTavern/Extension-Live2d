@@ -31,8 +31,10 @@ DONE:
   - wait before sending interaction message if one is running
   - don't send hit area when moving
   - Hide sprite of character with active live2d model
+  - Mouse tracking and mouth parameter customisation menu (auto populated / patched)
 
 TODO:
+- Search function / thumbnail
 - reset mapping button
 - Security
 - Features
@@ -72,6 +74,9 @@ import {
   onModelScaleChange,
   onModelCoordChange,
   onModelMouthChange,
+  onModelParamChange,
+  onModelParamResetClick,
+  onModelParamDeleteClick,
   onAnimationMappingChange,
   updateCharactersModels,
   updateCharactersList,
@@ -210,9 +215,35 @@ jQuery(async () => {
     $("#live2d_model_x").on("input", onModelCoordChange);
     $("#live2d_model_y").on("input", onModelCoordChange);
 
-    $("#live2d_model_param_mouth_open_y_id_select").on("change", onModelMouthChange);
+    $("#live2d_model_param_mouth_open_y_select").on("change", onModelMouthChange);
+    $("#live2d_model_param_mouth_open_y_reset").on("click", () => {onModelParamResetClick("live2d_model_param_mouth_open_y_select", "ParamMouthOpenY")});
+    $("#live2d_model_param_mouth_open_y_delete").on("click", () => {onModelParamDeleteClick("live2d_model_param_mouth_open_y_select", "ParamMouthOpenY")});
     $("#live2d_model_mouth_open_speed").on("input", onModelMouthChange);
     $("#live2d_model_mouth_time_per_character").on("input", onModelMouthChange);
+
+    $("#live2d_model_param_angle_x_select").on("change", onModelParamChange);
+    $("#live2d_model_param_angle_y_select").on("change", onModelParamChange);
+    $("#live2d_model_param_angle_z_select").on("change", onModelParamChange);
+    $("#live2d_model_param_body_angle_x_select").on("change", onModelParamChange);
+    $("#live2d_model_param_breath_select").on("change", onModelParamChange);
+    $("#live2d_model_param_eye_x_select").on("change", onModelParamChange);
+    $("#live2d_model_param_eye_y_select").on("change", onModelParamChange);
+
+    $("#live2d_model_param_angle_x_reset").on("click", () => {onModelParamResetClick("live2d_model_param_angle_x_select", "idParamAngleX")});
+    $("#live2d_model_param_angle_y_reset").on("click", () => {onModelParamResetClick("live2d_model_param_angle_y_select", "idParamAngleY")});
+    $("#live2d_model_param_angle_z_reset").on("click", () => {onModelParamResetClick("live2d_model_param_angle_z_select", "idParamAngleZ")});
+    $("#live2d_model_param_body_angle_x_reset").on("click", () => {onModelParamResetClick("live2d_model_param_body_angle_x_select", "idParamBodyAngleX")});
+    $("#live2d_model_param_breath_reset").on("click", () => {onModelParamResetClick("live2d_model_param_breath_select", "idParamBreath")});
+    $("#live2d_model_param_eye_x_reset").on("click", () => {onModelParamResetClick("live2d_model_param_eye_x_select", "idParamEyeBallX")});
+    $("#live2d_model_param_eye_y_reset").on("click", () => {onModelParamResetClick("live2d_model_param_eye_y_select", "idParamEyeBallY")});
+
+    $("#live2d_model_param_angle_x_delete").on("click", () => {onModelParamDeleteClick("live2d_model_param_angle_x_select", "idParamAngleX")});
+    $("#live2d_model_param_angle_y_delete").on("click", () => {onModelParamDeleteClick("live2d_model_param_angle_y_select", "idParamAngleY")});
+    $("#live2d_model_param_angle_z_delete").on("click", () => {onModelParamDeleteClick("live2d_model_param_angle_z_select", "idParamAngleZ")});
+    $("#live2d_model_param_body_angle_x_delete").on("click", () => {onModelParamDeleteClick("live2d_model_param_body_angle_x_select", "idParamBodyAngleX")});
+    $("#live2d_model_param_breath_delete").on("click", () => {onModelParamDeleteClick("live2d_model_param_breath_select", "idParamBreath")});
+    $("#live2d_model_param_eye_x_delete").on("click", () => {onModelParamDeleteClick("live2d_model_param_eye_x_select", "idParamEyeBallX")});
+    $("#live2d_model_param_eye_y_delete").on("click", () => {onModelParamDeleteClick("live2d_model_param_eye_y_select", "idParamEyeBallY")});
 
     $("#live2d_starter_expression_select").on("change", () => {onAnimationMappingChange("animation_starter")});
     $("#live2d_starter_motion_select").on("change", () => {onAnimationMappingChange("animation_starter")});
@@ -250,6 +281,7 @@ jQuery(async () => {
     eventSource.on(event_types.MESSAGE_RECEIVED, (chat_id) => updateExpression(chat_id));
     eventSource.on(event_types.MESSAGE_RECEIVED, (chat_id) => playMessage(chat_id));
     updateCharactersListOnce();
+    updateCharactersModels();
 
     console.debug(DEBUG_PREFIX,"Finish loaded.");
 });

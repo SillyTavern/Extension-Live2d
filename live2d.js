@@ -273,10 +273,14 @@ async function loadLive2d(visible=true) {
         model.is_dragged = false;
         console.debug(DEBUG_PREFIX,"loaded",model);
         
-        // Patch basic animations
+        // Apply basic cursor animations
         if (model.internalModel !== undefined) {
-            let model_parameter_ids = model.internalModel.coreModel._model?.parameters?.ids ?? [];
-
+            for (const param in extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"]) {
+                model.internalModel[param] = extension_settings.live2d.characterModelsSettings[character][model_path]["cursor_param"][param];
+                console.debug(DEBUG_PREFIX,"Assigned parameter",param,"as",model.internalModel[param]);
+            }
+        }
+        /*
             console.debug(DEBUG_PREFIX,"Checking model basic animations parameters:",model_parameter_ids);
             for (const param in ID_PARAM_PATCH) {
                 let param_id = model.internalModel[param];
@@ -300,7 +304,7 @@ async function loadLive2d(visible=true) {
                         console.log(DEBUG_PREFIX,"WARNING, cannot find corresponding parameter for",param);
                 }
             }
-        }
+        }*/
 
         models[character] = model;
         app.stage.addChild(model);
