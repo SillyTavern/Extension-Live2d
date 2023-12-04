@@ -33,7 +33,7 @@ let models = {};
 let app = null;
 let is_talking = {};
 let abortTalking = {};
-let previous_interaction = {'character': '', 'message': ''};
+let previous_interaction = { 'character': '', 'message': '' };
 let last_motion = {};
 
 
