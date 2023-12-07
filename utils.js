@@ -39,7 +39,7 @@ function currentChatMembers() {
     return chat_members;
 }
 
-function loadModelParamUi(character, model_path, model_parameter_ids, param_select_id, param_id, user_settings_exists, force=false) {
+function loadModelParamUi(character, model_path, model_parameter_ids, param_select_id, param_id, user_settings_exists, force = false) {
     $(`#${param_select_id}`)
         .find('option')
         .remove()
@@ -136,7 +136,7 @@ function loadAnimationUi(model_expressions, model_motions, expression_select_id,
     for (const i of model_expressions) {
         const name = i[Object.keys(i).find(key => key.toLowerCase() === 'name')];
         const file = i[Object.keys(i).find(key => key.toLowerCase() === 'file')];
-        $(`#${expression_select_id}`).append(new Option(name+' ('+file+')', name));
+        $(`#${expression_select_id}`).append(new Option(name + ' (' + file + ')', name));
     }
 
     for (const motion in model_motions) {
@@ -147,7 +147,7 @@ function loadAnimationUi(model_expressions, model_motions, expression_select_id,
             $(`#${motion_select_id}`).append(new Option(motion + ' random', motion + '_id=random'));
             for (const motion_id in model_motions[motion]) {
                 const file = model_motions[motion][motion_id][Object.keys(model_motions[motion][motion_id]).find(key => key.toLowerCase() === 'file')];
-                $(`#${motion_select_id}`).append(new Option(motion + ' ' + motion_id + ' ('+file+')', motion + '_id=' + motion_id));
+                $(`#${motion_select_id}`).append(new Option(motion + ' ' + motion_id + ' (' + file + ')', motion + '_id=' + motion_id));
             }
         }
     }

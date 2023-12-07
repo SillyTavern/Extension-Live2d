@@ -685,12 +685,12 @@ async function updateCharactersModels(refreshButton = false) {
             for (const entry of local_models) {
                 let label = entry.replace('assets\\live2d\\','').replaceAll('\\', '/');
                 label = label.substring(0, label.lastIndexOf('/'));
-                characters_models[character].push([label+' (char folder)',entry]);
+                characters_models[character].push([label + ' (char folder)',entry]);
             }
             for (const entry of assets['live2d']) {
                 let label = entry.replace('assets\\live2d\\','').replaceAll('\\', '/');
                 label = label.substring(0, label.lastIndexOf('/'));
-                characters_models[character].push([label+' (assets folder)',entry]);
+                characters_models[character].push([label + ' (assets folder)',entry]);
             }
             console.debug(DEBUG_PREFIX, 'Updated models of', character);
         }

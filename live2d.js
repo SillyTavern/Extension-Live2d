@@ -95,7 +95,7 @@ async function onHitAreasClick(character, hitAreas) {
     if (message != '') {
         console.debug(DEBUG_PREFIX,getContext());
         // Same interaction as last message
-        if (getContext().chat[getContext().chat.length-1].is_user && previous_interaction['character'] == character && previous_interaction['message'] == message) {
+        if (getContext().chat[getContext().chat.length - 1].is_user && previous_interaction['character'] == character && previous_interaction['message'] == message) {
             console.debug(DEBUG_PREFIX,'Same as last interaction, nothing done');
         }
         else {
@@ -149,7 +149,7 @@ function draggable(model) {
         if (model.dragging) {
             const new_x = e.data.global.x - model._pointerX;
             const new_y = e.data.global.y - model._pointerY;
-            model.is_dragged = (model.position.x != new_x )|| (model.position.y != new_y);
+            model.is_dragged = (model.position.x != new_x ) || (model.position.y != new_y);
             console.debug(DEBUG_PREFIX,'Draging model',model.is_dragged);
 
             model.position.x = new_x;
@@ -159,8 +159,8 @@ function draggable(model) {
             const character = model.st_character;
             const model_path = model.st_model_path;
             //console.debug(DEBUG_PREFIX,"Dragging",character,model_path, "to", model.position, "canvas", innerWidth,innerHeight);
-            extension_settings.live2d.characterModelsSettings[character][model_path]['x'] = Math.round(((model.x + (model.width / 2)) - (innerWidth / 2)) / (innerWidth/2/100));
-            extension_settings.live2d.characterModelsSettings[character][model_path]['y'] = Math.round(((model.y + (model.height / 2)) - (innerHeight / 2)) / (innerHeight/2/100));
+            extension_settings.live2d.characterModelsSettings[character][model_path]['x'] = Math.round(((model.x + (model.width / 2)) - (innerWidth / 2)) / (innerWidth / 2 / 100));
+            extension_settings.live2d.characterModelsSettings[character][model_path]['y'] = Math.round(((model.y + (model.height / 2)) - (innerHeight / 2)) / (innerHeight / 2 / 100));
             saveSettingsDebounced();
             $('#live2d_model_x').val(extension_settings.live2d.characterModelsSettings[character][model_path]['x']);
             $('#live2d_model_x').val(extension_settings.live2d.characterModelsSettings[character][model_path]['x']);
@@ -187,7 +187,7 @@ function showFrames(model) {
     model.addChild(hitAreaFrames);
 }
 
-async function loadLive2d(visible=true) {
+async function loadLive2d(visible = true) {
     console.debug(DEBUG_PREFIX, 'Updating live2d app.');
     // 1) Cleanup memory
     // Reset the PIXI app
@@ -209,14 +209,14 @@ async function loadLive2d(visible=true) {
 
     if (!extension_settings.live2d.enabled) {
         // Show solo chat sprite
-        $('#'+SPRITE_DIV).removeClass('live2d-hidden');
-        $('#'+VN_MODE_DIV).removeClass('live2d-hidden');
+        $('#' + SPRITE_DIV).removeClass('live2d-hidden');
+        $('#' + VN_MODE_DIV).removeClass('live2d-hidden');
         return;
     }
 
     // Hide sprite divs
-    $('#'+SPRITE_DIV).addClass('live2d-hidden');
-    $('#'+VN_MODE_DIV).addClass('live2d-hidden');
+    $('#' + SPRITE_DIV).addClass('live2d-hidden');
+    $('#' + VN_MODE_DIV).addClass('live2d-hidden');
 
     // Create new canvas and PIXI app
     var canvas = document.createElement('canvas');
@@ -486,7 +486,7 @@ async function playExpression(character, expression) {
     await model.expression(expression);
 }
 
-async function playMotion(character, motion, force=false) {
+async function playMotion(character, motion, force = false) {
     if (models[character] === undefined)
         return;
 
@@ -592,7 +592,7 @@ async function playMessage(chat_id) {
 }
 
 function setVisible() {
-    $('#'+CANVAS_ID).removeClass('live2d-hidden');
+    $('#' + CANVAS_ID).removeClass('live2d-hidden');
 }
 
 function charactersWithModelLoaded() {
