@@ -43,6 +43,7 @@ export {
     onModelChange,
     onModelScaleChange,
     onModelCoordChange,
+    onModelEyeOffsetChange,
     onModelMouthChange,
     onModelParamChange,
     onModelParamResetClick,
@@ -205,6 +206,14 @@ async function onModelCoordChange() {
     moveModel(character, extension_settings.live2d.characterModelsSettings[character][model_path]['x'], extension_settings.live2d.characterModelsSettings[character][model_path]['y']);
 }
 
+async function onModelEyeOffsetChange() {
+    const character = String($('#live2d_character_select').val());
+    const model_path = String($('#live2d_model_select').val());
+    extension_settings.live2d.characterModelsSettings[character][model_path]['eye'] = Number($('#live2d_model_eye').val());
+    $('#live2d_model_eye_value').text(extension_settings.live2d.characterModelsSettings[character][model_path]['eye']);
+    saveSettingsDebounced();
+}
+
 async function onModelMouthChange() {
     const character = String($('#live2d_character_select').val());
     const model_path = String($('#live2d_model_select').val());
@@ -240,7 +249,13 @@ async function onModelParamChange() {
 async function onModelParamResetClick(param_select_id, param_id) {
     const character = String($('#live2d_character_select').val());
     const model_path = String($('#live2d_model_select').val());
-    const model = await live2d.Live2DModel.from(model_path); // TODO delete
+    var t;
+    try{
+        t = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||-0.45)
+    }catch{
+        t = await live2d.Live2DModel.from(model_path)
+    }
+    const model = t;
     const model_parameter_ids = model.internalModel.coreModel._model?.parameters?.ids ?? [];
     // Free memory
     model.destroy(true, true, true);
@@ -335,7 +350,13 @@ async function loadModelUi() {
     const model_path = String($('#live2d_model_select').val());
     const expression_ui = $('#live2d_expression_mapping');
     const hit_areas_ui = $('#live2d_hit_areas_mapping');
-    const model = await live2d.Live2DModel.from(model_path);
+    var t;
+    try{
+        t = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||-0.45)
+    }catch{
+        t = await live2d.Live2DModel.from(model_path)
+    }
+    const model = t;
 
     expression_ui.empty();
     hit_areas_ui.empty();
@@ -383,6 +404,7 @@ async function loadModelUi() {
             'scale': default_scale,
             'x': 0.0,
             'y': 0.0,
+            'eye':-.45,
             'cursor_param': {
                 'idParamAngleX' : 'none',
                 'idParamAngleY' : 'none',
@@ -420,6 +442,8 @@ async function loadModelUi() {
     $('#live2d_model_x_value').text(extension_settings.live2d.characterModelsSettings[character][model_path]['x']);
     $('#live2d_model_y').val(extension_settings.live2d.characterModelsSettings[character][model_path]['y']);
     $('#live2d_model_y_value').text(extension_settings.live2d.characterModelsSettings[character][model_path]['y']);
+    $('#live2d_model_eye').val(extension_settings.live2d.characterModelsSettings[character][model_path]['eye']);
+    $('#live2d_model_eye_value').text(extension_settings.live2d.characterModelsSettings[character][model_path]['eye']);
 
     $('#live2d_model_mouth_open_speed').val(extension_settings.live2d.characterModelsSettings[character][model_path]['mouth_open_speed']);
     $('#live2d_model_mouth_open_speed_value').text(extension_settings.live2d.characterModelsSettings[character][model_path]['mouth_open_speed']);
@@ -450,6 +474,7 @@ async function loadModelUi() {
 
   $("#live2d_model_param_mouth_open_y_select").val(extension_settings.live2d.characterModelsSettings[character][model_path]["param_mouth_open_y_id"]);*/
 
+	// MouthAnimations
     loadModelParamUi(character, model_path, model_parameter_ids, 'live2d_model_param_mouth_open_y_select', 'ParamMouthOpenY', user_settings_exists);
 
     // Mouse tracking parameters

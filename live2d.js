@@ -267,7 +267,13 @@ async function loadLive2d(visible = true) {
         console.debug(DEBUG_PREFIX,'Loading',extension_settings.live2d.characterModelMapping[character]);
 
         const model_path = extension_settings.live2d.characterModelMapping[character];
-        const model = await live2d.Live2DModel.from(model_path);
+        var m;
+        try{
+            m = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||-0.45);
+        }catch{
+            m = await live2d.Live2DModel.from(model_path); 
+        }
+        const model = m;
         model.st_character = character;
         model.st_model_path = model_path;
         model.is_dragged = false;
@@ -275,9 +281,13 @@ async function loadLive2d(visible = true) {
 
         // Apply basic cursor animations
         if (model.internalModel !== undefined) {
-            for (const param in extension_settings.live2d.characterModelsSettings[character][model_path]['cursor_param']) {
-                model.internalModel[param] = extension_settings.live2d.characterModelsSettings[character][model_path]['cursor_param'][param];
-                console.debug(DEBUG_PREFIX,'Assigned parameter',param,'as',model.internalModel[param]);
+            try{
+                for (const param in extension_settings.live2d.characterModelsSettings[character][model_path]['cursor_param']) {
+                    model.internalModel[param] = extension_settings.live2d.characterModelsSettings[character][model_path]['cursor_param'][param];
+                    console.debug(DEBUG_PREFIX,'Assigned parameter',param,'as',model.internalModel[param]);
+                }                
+            }catch{
+                continue;
             }
         }
         /*

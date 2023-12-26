@@ -74,6 +74,7 @@ import {
     onModelChange,
     onModelScaleChange,
     onModelCoordChange,
+    onModelEyeOffsetChange,
     onModelMouthChange,
     onModelParamChange,
     onModelParamResetClick,
@@ -217,10 +218,14 @@ jQuery(async () => {
     $('#live2d_model_scale').on('input', onModelScaleChange);
     $('#live2d_model_x').on('input', onModelCoordChange);
     $('#live2d_model_y').on('input', onModelCoordChange);
+    $('#live2d_model_eye').on('input', onModelEyeOffsetChange);
 
     $('#live2d_model_param_mouth_open_y_select').on('change', onModelMouthChange);
     $('#live2d_model_param_mouth_open_y_reset').on('click', () => {onModelParamResetClick('live2d_model_param_mouth_open_y_select', 'ParamMouthOpenY');});
     $('#live2d_model_param_mouth_open_y_delete').on('click', () => {onModelParamDeleteClick('live2d_model_param_mouth_open_y_select', 'ParamMouthOpenY');});
+    $('#live2d_model_param_mouth_form_01_select').on('change', onModelMouthChange);
+    $('#live2d_model_param_mouth_form_01_reset').on('click', () => {onModelParamResetClick('live2d_model_param_mouth_open_y_select', 'ParamMouthForm01');});
+    $('#live2d_model_param_mouth_form_01_delete').on('click', () => {onModelParamDeleteClick('live2d_model_param_mouth_open_y_select', 'ParamMouthForm01');});
     $('#live2d_model_mouth_open_speed').on('input', onModelMouthChange);
     $('#live2d_model_mouth_time_per_character').on('input', onModelMouthChange);
 
