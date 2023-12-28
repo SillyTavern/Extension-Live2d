@@ -74,6 +74,7 @@ import {
     onModelChange,
     onModelScaleChange,
     onModelCoordChange,
+    onModelEyeOffsetChange,
     onModelMouthChange,
     onModelParamChange,
     onModelParamResetClick,
@@ -217,6 +218,7 @@ jQuery(async () => {
     $('#live2d_model_scale').on('input', onModelScaleChange);
     $('#live2d_model_x').on('input', onModelCoordChange);
     $('#live2d_model_y').on('input', onModelCoordChange);
+    $('#live2d_model_eye').on('input', onModelEyeOffsetChange);
 
     $('#live2d_model_param_mouth_open_y_select').on('change', onModelMouthChange);
     $('#live2d_model_param_mouth_open_y_reset').on('click', () => {onModelParamResetClick('live2d_model_param_mouth_open_y_select', 'ParamMouthOpenY');});

@@ -97,8 +97,8 @@ const ID_PARAM_DEFAULT = {
 
 // Animations patches
 const ID_PARAM_PATCH = {
-    'idParamAngleX' : ['PARAM_BODY_ANGLE_X'],
-    'idParamAngleY' : ['PARAM_BODY_ANGLE_Y'],
+    'idParamAngleX' : ['PARAM_ANGLE_X'],
+    'idParamAngleY' : ['PARAM_ANGLE_Y'],
     'idParamAngleZ' : ['PARAM_ANGLE_Z'],
     'idParamBodyAngleX' : ['PARAM_BODY_ANGLE_X'],
     'idParamBreath' : ['PARAM_BREATH'],
