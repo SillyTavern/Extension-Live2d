@@ -404,7 +404,7 @@ async function loadModelUi() {
             'scale': default_scale,
             'x': 0.0,
             'y': 0.0,
-            'eye':-.45,
+            'eye':45,
             'cursor_param': {
                 'idParamAngleX' : 'none',
                 'idParamAngleY' : 'none',
