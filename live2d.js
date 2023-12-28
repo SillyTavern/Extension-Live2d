@@ -269,7 +269,7 @@ async function loadLive2d(visible = true) {
         const model_path = extension_settings.live2d.characterModelMapping[character];
         var m;
         try{
-            m = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||-0.45);
+            m = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||45);
         }catch{
             m = await live2d.Live2DModel.from(model_path); 
         }

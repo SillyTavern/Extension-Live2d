@@ -251,7 +251,7 @@ async function onModelParamResetClick(param_select_id, param_id) {
     const model_path = String($('#live2d_model_select').val());
     var t;
     try{
-        t = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||-0.45)
+        t = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||45)
     }catch{
         t = await live2d.Live2DModel.from(model_path)
     }
@@ -352,7 +352,7 @@ async function loadModelUi() {
     const hit_areas_ui = $('#live2d_hit_areas_mapping');
     var t;
     try{
-        t = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||-0.45)
+        t = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||45)
     }catch{
         t = await live2d.Live2DModel.from(model_path)
     }

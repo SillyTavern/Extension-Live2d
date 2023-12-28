@@ -223,9 +223,6 @@ jQuery(async () => {
     $('#live2d_model_param_mouth_open_y_select').on('change', onModelMouthChange);
     $('#live2d_model_param_mouth_open_y_reset').on('click', () => {onModelParamResetClick('live2d_model_param_mouth_open_y_select', 'ParamMouthOpenY');});
     $('#live2d_model_param_mouth_open_y_delete').on('click', () => {onModelParamDeleteClick('live2d_model_param_mouth_open_y_select', 'ParamMouthOpenY');});
-    $('#live2d_model_param_mouth_form_01_select').on('change', onModelMouthChange);
-    $('#live2d_model_param_mouth_form_01_reset').on('click', () => {onModelParamResetClick('live2d_model_param_mouth_open_y_select', 'ParamMouthForm01');});
-    $('#live2d_model_param_mouth_form_01_delete').on('click', () => {onModelParamDeleteClick('live2d_model_param_mouth_open_y_select', 'ParamMouthForm01');});
     $('#live2d_model_mouth_open_speed').on('input', onModelMouthChange);
     $('#live2d_model_mouth_time_per_character').on('input', onModelMouthChange);
 
