@@ -114,7 +114,7 @@ async function onCharacterChange() {
     if (characters_models[character] !== undefined) {
         for (const i of characters_models[character]) {
             //console.debug(DEBUG_PREFIX,"DEBUG",i)
-            const model_folder = i[0] + ' (' + i[1].replace(/^.*[\\\/]/, '') + ')';
+            const model_folder = i[0].substring(0, i[0].lastIndexOf('/')).match(/([^\/]*)\/*$/)[1] + "/" + i[0].match(/([^\/]*)\/*$/)[1].replace('(assets folder)','');; // i[0] + ' (' + i[1].replace(/^.*[\\\/]/, '') + ')';
             const model_settings_path = i[1];
             $('#live2d_model_select').append(new Option(model_folder, model_settings_path));
         }
