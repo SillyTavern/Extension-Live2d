@@ -114,7 +114,7 @@ async function onCharacterChange() {
     if (characters_models[character] !== undefined) {
         for (const i of characters_models[character]) {
             //console.debug(DEBUG_PREFIX,"DEBUG",i)
-            const model_folder = i[0].substring(0, i[0].lastIndexOf('/')).match(/([^\/]*)\/*$/)[1] + "/" + i[0].match(/([^\/]*)\/*$/)[1].replace('(assets folder)','');; // i[0] + ' (' + i[1].replace(/^.*[\\\/]/, '') + ')';
+            const model_folder = i[0].substring(0, i[0].lastIndexOf('/')).match(/([^\/]*)\/*$/)[1] + "/" + i[0].match(/([^\/]*)\/*$/)[1].replace('(assets folder)',''); // i[0] + ' (' + i[1].replace(/^.*[\\\/]/, '') + ')';
             const model_settings_path = i[1];
             $('#live2d_model_select').append(new Option(model_folder, model_settings_path));
         }
@@ -431,6 +431,21 @@ async function loadModelUi() {
         for (const area in model_hit_areas) {
             extension_settings.live2d.characterModelsSettings[character][model_path]['hit_areas'][area] = { 'expression': 'none', 'motion': 'none', 'message': '' };
         }
+
+        // Check if model has default settings
+        const model_settings_path = model_path.substring(0, model_path.lastIndexOf('/'))+"/sillytavern_settings.json"
+        console.debug(DEBUG_PREFIX,"Checking if setting file exist in ",model_settings_path)
+        try {
+            const response = await fetch(model_settings_path);
+            if (response.ok){ 
+                const result = await response.json();
+                console.debug(DEBUG_PREFIX,"File found");
+                extension_settings.live2d.characterModelsSettings[character][model_path] = result;
+            }
+        } catch (error) {
+            console.debug(DEBUG_PREFIX,"File not found, using default value");
+        }
+        console.debug(DEBUG_PREFIX,"Default settings:",extension_settings.live2d.characterModelsSettings[character][model_path])
 
         saveSettingsDebounced();
     }
