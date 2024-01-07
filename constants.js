@@ -6,6 +6,7 @@ export {
     CLASSIFY_EXPRESSIONS,
     FALLBACK_EXPRESSION,
     extensionFolderPath,
+    modelfolderPath,
     live2d,
     CANVAS_ID,
     delay,
@@ -62,6 +63,7 @@ const JS_LIBS = [
     'extra.min.js',
 ];
 
+const modelfolderPath = 'assets/live2d';
 const extensionFolderPath = 'scripts/extensions/third-party/Extension-Live2d';
 // Load JS libraries
 for(const i of JS_LIBS){
