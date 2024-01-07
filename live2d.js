@@ -271,7 +271,7 @@ async function loadLive2d(visible = true) {
         try{
             m = await live2d.Live2DModel.from(model_path, null, extension_settings.live2d.characterModelsSettings[character][model_path]['eye']||45);
         }catch{
-            m = await live2d.Live2DModel.from(model_path); 
+            m = await live2d.Live2DModel.from(model_path);
         }
         const model = m;
         model.st_character = character;
@@ -285,7 +285,7 @@ async function loadLive2d(visible = true) {
                 for (const param in extension_settings.live2d.characterModelsSettings[character][model_path]['cursor_param']) {
                     model.internalModel[param] = extension_settings.live2d.characterModelsSettings[character][model_path]['cursor_param'][param];
                     console.debug(DEBUG_PREFIX,'Assigned parameter',param,'as',model.internalModel[param]);
-                }                
+                }
             }catch{
                 continue;
             }

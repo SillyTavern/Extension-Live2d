@@ -10,6 +10,7 @@ import {
     delay,
     PARAM_MOUTH_OPEN_Y_DEFAULT,
     ID_PARAM_DEFAULT,
+    extensionFolderPath,
 } from './constants.js';
 
 import {
@@ -29,6 +30,10 @@ import {
     loadAnimationUi,
 } from './utils.js';
 
+import {
+    startSelectDialog,
+} from './gallery/gallery.js';
+
 export {
     onEnabledClick,
     onFollowCursorClick,
@@ -41,6 +46,7 @@ export {
     onCharacterRemoveClick,
     onModelRefreshClick,
     onModelChange,
+    onCharacterSelectClick,
     onModelScaleChange,
     onModelCoordChange,
     onModelEyeOffsetChange,
@@ -53,6 +59,8 @@ export {
     updateCharactersList,
     updateCharactersListOnce,
     playStarterAnimation,
+    getCharacterLive2dFiles,
+    getAssetsLive2dFiles,
 };
 
 let characters_list = [];
@@ -161,14 +169,25 @@ async function onCharacterRemoveClick() {
     }
 }
 
+async function onCharacterSelectClick() {
+    fetch(`${extensionFolderPath}/gallery/galleryDlg.html`)
+        .then(resp => resp.text())
+        .then(data => {
+            startSelectDialog(data);
+        })
+        .catch(err => console.error('Error loading the Dialog', err));
+}
+
 async function onModelRefreshClick() {
     updateCharactersModels(true);
     $('#live2d_model_select').val('none');
     $('#live2d_model_select').trigger('change');
 }
 
-async function onModelChange() {
+async function onModelChange(event, galleryPath = null) {
     const character = String($('#live2d_character_select').val());
+    if(galleryPath)
+        $('#live2d_model_select').val(galleryPath);
     const model_path = String($('#live2d_model_select').val());
 
     if (model_path == 'none') {
@@ -437,7 +456,7 @@ async function loadModelUi() {
         console.debug(DEBUG_PREFIX,"Checking if setting file exist in ",model_settings_path)
         try {
             const response = await fetch(model_settings_path);
-            if (response.ok){ 
+            if (response.ok){
                 const result = await response.json();
                 console.debug(DEBUG_PREFIX,"File found");
                 extension_settings.live2d.characterModelsSettings[character][model_path] = result;

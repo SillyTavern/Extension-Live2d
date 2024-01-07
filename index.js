@@ -72,6 +72,7 @@ import {
     onCharacterRemoveClick,
     onModelRefreshClick,
     onModelChange,
+    onCharacterSelectClick,
     onModelScaleChange,
     onModelCoordChange,
     onModelEyeOffsetChange,
@@ -211,6 +212,7 @@ jQuery(async () => {
     $('#live2d_character_select').on('change', onCharacterChange);
     $('#live2d_character_refresh_button').on('click', onCharacterRefreshClick);
     $('#live2d_character_remove_button').on('click', onCharacterRemoveClick);
+    $('#live2d_character_select_button').on('click', onCharacterSelectClick);
 
     $('#live2d_model_refresh_button').on('click', onModelRefreshClick);
     $('#live2d_model_select').on('change', onModelChange);
