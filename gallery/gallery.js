@@ -78,6 +78,7 @@ async function get_live2d_model(filter) {
     let live2d_models = [];
     const assets = await getAssetsLive2dFiles();
 
+    console.log('FILTER', filter);
     console.log('found models');
     for (const entry of assets['live2d']) {
         let skip = false;
@@ -119,6 +120,35 @@ async function get_live2d_model(filter) {
     showThumbnails(live2d_models);
 }
 
+function checkFilter() {
+    let input = '';
+    // if ($('#live2d_sex_select').val())
+    //     input += ',' + $('#live2d_sex_select').val();
+    if ($('#live2d_eyecolor_select').val())
+        input += ',' + $('#live2d_eyecolor_select').val();
+    if ($('#live2d_haircolor_select').val())
+        input += ',' + $('#live2d_haircolor_select').val();
+    if ($('#live2d_hairlength_select').val())
+        input += ',' + $('#live2d_hairlength_select').val() ;
+    if ($('#live2d_breastsize_select').val())
+        input += ',' + $('#live2d_breastsize_select').val();
+    if ($('#live2D-tag-filter').val())
+        input += ',' + $('#live2D-tag-filter').val();
+
+    return input.substring(1);
+}
+
+async function applyFilter(){
+    let filter = {
+        'text' : '',
+        'tags' : '',
+    };
+
+    filter.tags = checkFilter();
+    filter.text = $('#live2D-text-filter').val();
+    get_live2d_model(filter);
+}
+
 async function startSelectDialog(data){
     document.body.insertAdjacentHTML('afterbegin', data);
     let settings = document.getElementById('live2d_settings');
@@ -131,6 +161,52 @@ async function startSelectDialog(data){
         'tags' : '',
     };
 
+    // populate filter
+    // for now hard coded
+    // $('#live2d_sex_select').append(new Option('any', ''));
+    // $('#live2d_sex_select').append(new Option('M', '1boy'));
+    // $('#live2d_sex_select').append(new Option('F', '1girl'));
+    // $('#live2d_sex_select').trigger('change');
+
+    $('#live2d_eyecolor_select').append(new Option('any', ''));
+    $('#live2d_eyecolor_select').append(new Option('brown', 'browneyes'));
+    $('#live2d_eyecolor_select').append(new Option('blue', 'blueeyes'));
+    $('#live2d_eyecolor_select').append(new Option('red', 'redeyes'));
+    $('#live2d_eyecolor_select').append(new Option('green', 'greeneyes'));
+    $('#live2d_eyecolor_select').append(new Option('yellow', 'yelloweyes'));
+    $('#live2d_eyecolor_select').append(new Option('orange', 'orangeeyes'));
+    $('#live2d_eyecolor_select').append(new Option('purple', 'purpleeyes'));
+    $('#live2d_eyecolor_select').append(new Option('pink', 'pinkeyes'));
+    $('#live2d_eyecolor_select').append(new Option('black', 'blackeyes'));
+    $('#live2d_eyecolor_select').append(new Option('gray', 'grayeyes'));
+    $('#live2d_eyecolor_select').trigger('change');
+
+    $('#live2d_haircolor_select').append(new Option('any', ''));
+    $('#live2d_haircolor_select').append(new Option('brown', 'brownhair'));
+    $('#live2d_haircolor_select').append(new Option('blue', 'bluehair'));
+    $('#live2d_haircolor_select').append(new Option('red', 'redhair'));
+    $('#live2d_haircolor_select').append(new Option('green', 'greenhair'));
+    $('#live2d_haircolor_select').append(new Option('yellow', 'yellowhair'));
+    $('#live2d_haircolor_select').append(new Option('orange', 'orangehair'));
+    $('#live2d_haircolor_select').append(new Option('purple', 'purplehair'));
+    $('#live2d_haircolor_select').append(new Option('pink', 'pinkhair'));
+    $('#live2d_haircolor_select').append(new Option('black', 'blackhair'));
+    $('#live2d_haircolor_select').append(new Option('gray', 'grayhair'));
+    $('#live2d_haircolor_select').append(new Option('white', 'whitehair'));
+    $('#live2d_haircolor_select').trigger('change');
+
+    $('#live2d_hairlength_select').append(new Option('any', ''));
+    $('#live2d_hairlength_select').append(new Option('short', 'shorthair'));
+    $('#live2d_hairlength_select').append(new Option('long', 'longhair'));
+    $('#live2d_hairlength_select').append(new Option('very long', 'verylonghair'));
+    $('#live2d_hairlength_select').trigger('change');
+
+    $('#live2d_breastsize_select').append(new Option('any', ''));
+    $('#live2d_breastsize_select').append(new Option('small', 'smallbreasts'));
+    $('#live2d_breastsize_select').append(new Option('medium', 'mediumbreasts'));
+    $('#live2d_breastsize_select').append(new Option('large', 'largebreasts'));
+    $('#live2d_breastsize_select').trigger('change');
+
     // Eventlistener
     // - closing the Dialog by btn
     $('#live2D-dialog-btn-close').on('click', () => {
@@ -142,34 +218,43 @@ async function startSelectDialog(data){
         settings.click();
         if(!popup.contains(event.target))
             document.body.removeChild(dlg);
-    })
+    });
 
     // - reseting all filters
     $('#live2D-no-filter').on('click', () => {
         $('#live2D-text-filter').val('');
+        $('#live2D-tag-filter').val('');
+        $('#live2d_sex_select').val('');
+        $('#live2d_eyecolor_select').val('');
+        $('#live2d_haircolor_select').val('');
+        $('#live2d_hairlength_select').val('');
+        $('#live2d_breastsize_select').val('');
 
         filter.text = '';
         filter.tags = '';
         get_live2d_model(filter);
     });
 
+    // - setting filter
+    $('#live2d_sex_select').on('change', applyFilter);
+    $('#live2d_eyecolor_select').on('change', applyFilter);
+    $('#live2d_haircolor_select').on('change', applyFilter);
+    $('#live2d_hairlength_select').on('change', applyFilter);
+    $('#live2d_breastsize_select').on('change', applyFilter);
+
     // - setting the search-string filter for path and name
     $('#live2D-text-filter').on('input', function() {
-        const input = $(this).val();
         clearTimeout(timer);
         timer = setTimeout(() => {
-            filter.text = input;
-            get_live2d_model(filter);
+            applyFilter();
         }, debounceTime);
     });
 
     // - setting the search-string filter for tags
     $('#live2D-tag-filter').on('input', function() {
-        const input = $(this).val();
         clearTimeout(timer);
         timer = setTimeout(() => {
-            filter.tags = input;
-            get_live2d_model(filter);
+            applyFilter();
         }, debounceTime);
     });
 
