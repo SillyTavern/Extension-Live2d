@@ -186,7 +186,7 @@ async function startSelectDialog(data){
     $('#live2d_haircolor_select').append(new Option('blue', 'bluehair'));
     $('#live2d_haircolor_select').append(new Option('red', 'redhair'));
     $('#live2d_haircolor_select').append(new Option('green', 'greenhair'));
-    $('#live2d_haircolor_select').append(new Option('yellow', 'yellowhair'));
+    $('#live2d_haircolor_select').append(new Option('blonde', 'blondehair'));
     $('#live2d_haircolor_select').append(new Option('orange', 'orangehair'));
     $('#live2d_haircolor_select').append(new Option('purple', 'purplehair'));
     $('#live2d_haircolor_select').append(new Option('pink', 'pinkhair'));
