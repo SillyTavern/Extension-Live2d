@@ -248,6 +248,7 @@ async function loadLive2d(visible = true) {
     $('body').append(canvas);
 
     app = new PIXI.Application({
+        resolution: 2 * window.devicePixelRatio,
         view: document.getElementById(CANVAS_ID),
         autoStart: true,
         resizeTo: window,
