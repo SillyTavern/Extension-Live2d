@@ -36,6 +36,11 @@ let abortTalking = {};
 let previous_interaction = { 'character': '', 'message': '' };
 let last_motion = {};
 
+const EXPRESSION_API = {
+    local: 0,
+    extras: 1,
+    llm: 2,
+};
 
 async function onHitAreasClick(character, hitAreas) {
     const model_path = extension_settings.live2d.characterModelMapping[character];
@@ -389,14 +394,15 @@ async function updateExpression(chat_id) {
 
 async function getExpressionLabel(text) {
     // Return if text is undefined, saving a costly fetch request
-    if ((!modules.includes('classify') && !extension_settings.expressions.local) || !text) {
+    if ((!modules.includes('classify') && extension_settings.expressions.api === EXPRESSION_API.extras) || !text) {
         return FALLBACK_EXPRESSION;
     }
 
     text = sampleClassifyText(text);
 
     try {
-        if (extension_settings.expressions.local) {
+        // TODO: proper LLM classification
+        if (extension_settings.expressions.api === EXPRESSION_API.local || extension_settings.api === EXPRESSION_API.llm) {
             // Local transformers pipeline
             const apiResult = await fetch('/api/extra/classify', {
                 method: 'POST',
@@ -408,7 +414,7 @@ async function getExpressionLabel(text) {
                 const data = await apiResult.json();
                 return data.classification[0].label;
             }
-        } else {
+        } else if (extension_settings.expressions.api === EXPRESSION_API.extras) {
             // Extras
             const url = new URL(getApiUrl());
             url.pathname = '/api/classify';
@@ -426,6 +432,8 @@ async function getExpressionLabel(text) {
                 const data = await apiResult.json();
                 return data.classification[0].label;
             }
+        } else {
+            return FALLBACK_EXPRESSION;
         }
     } catch (error) {
         console.log(error);
