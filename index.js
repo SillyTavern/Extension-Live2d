@@ -196,8 +196,9 @@ async function moduleWorker() {
 // This function is called when the extension is loaded
 jQuery(async () => {
     const windowHtml = $(await $.get(`${extensionFolderPath}/window.html`));
+    const getContainer = () => $(document.getElementById('live2d_container') ?? document.getElementById('extensions_settings2'));
 
-    $('#extensions_settings').append(windowHtml);
+    getContainer().append(windowHtml);
     loadSettings();
 
     // Set user interactions
