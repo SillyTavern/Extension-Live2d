@@ -294,7 +294,7 @@ jQuery(async () => {
 
     registerSlashCommand('live2dexpression', setExpressionSlashCommand, [], '<span class="monospace">(character="characterName" motion="motionGroup_id=motionId")</span> – play live2d model motion (example: /live2dmotion character="Shizuku" motion="tap_body_id=0" /live2dmotion character="Aqua" motion="_id=1"', true, true);
     registerSlashCommand('live2dmotion', setMotionSlashCommand, [], '<span class="monospace">(character="characterName" expression="expressionName")</span> – play live2d model motion (example: /live2dexpression character="Shizuku" expression="f01" /live2dexpression character="Aqua" expression="Happy"', true, true);
-    registerSlashCommand('live2dparameter', setParameterSlashCommand, [], '', true, true)
+    registerSlashCommand('live2dparameter', setParameterSlashCommand, [], '<span class="monospace">(character="characterName" id="parameterId" value="parameterValue")</span> – change live2d model parameter (example: /live2dparameter character="Shizuku" id="ParamBrowLY" value=0', true, true)
 
     console.debug(DEBUG_PREFIX,'Finish loaded.');
 
