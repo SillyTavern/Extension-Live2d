@@ -319,7 +319,7 @@ async function setExpressionSlashCommand(args) {
     const character = args['character'].trim();
     const expression = args['expression'].trim();
 
-    console.debug(DEBUG_PREFIX,'Command expression received for',character,expression);
+    console.debug(DEBUG_PREFIX, `Command expression received for ${character} ${expression}`);
 
     await playExpression(character, expression);
 }
@@ -341,7 +341,7 @@ async function setMotionSlashCommand(args) {
     const character = args['character'].trim();
     const motion = args['motion'].trim();
 
-    console.debug(DEBUG_PREFIX,'Command motion received for',character,motion);
+    console.debug(DEBUG_PREFIX, `Command motion received for ${character} ${motion}`);
 
     await playMotion(character, motion);
 }
@@ -368,7 +368,7 @@ async function setParameterSlashCommand(args) {
         return;
     }
 
-    console.debug(DEBUG_PREFIX,'Command parameter received for',character);
+    console.debug(DEBUG_PREFIX, `Command parameter received for ${character}`);
 
     await setParameter(character, id, value);
 }
@@ -382,7 +382,7 @@ async function resetParametersSlashCommand(args) {
 
     const character = args['character'].trim();
 
-    console.debug(DEBUG_PREFIX,'Resetting all parameters for',character);
+    console.debug(DEBUG_PREFIX, `Resetting all parameters for ${character}`);
 
     await resetParameters(character);
 }
