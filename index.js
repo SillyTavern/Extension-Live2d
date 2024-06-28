@@ -279,7 +279,9 @@ jQuery(async () => {
     moduleWorker();
 
     // Events
-    window.addEventListener('resize', () => {loadLive2d(); console.debug(DEBUG_PREFIX,'Window resized, reloading live2d');});
+
+    // Comment this out for now due to multiple models showing up at once
+    //window.addEventListener('resize', () => {loadLive2d(); console.debug(DEBUG_PREFIX,'Window resized, reloading live2d');});
 
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersList);
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersModels);
