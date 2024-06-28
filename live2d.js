@@ -24,6 +24,7 @@ export {
     playMotion,
     playTalk,
     playMessage,
+    resetParameters,
     setParameter,
     setVisible,
     charactersWithModelLoaded,
@@ -615,6 +616,14 @@ async function playMessage(chat_id) {
 async function setParameter(character, paramId, paramValue) {
     const model = models[character];
     model.internalModel.coreModel.setParameterValueById(paramId, paramValue);
+}
+
+// Resets all parameters to default
+async function resetParameters(character) {
+    const model = models[character];
+    model.internalModel.coreModel._model.parameters.defaultValues.forEach((defaultValue, paramIndex) => {
+        model.internalModel.coreModel.setParameterValueByIndex(paramIndex, defaultValue);
+    });
 }
 
 function setVisible() {
