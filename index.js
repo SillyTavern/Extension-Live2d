@@ -95,6 +95,8 @@ import {
     forceLoopAnimation,
     playMotion,
     playExpression,
+    resetParameters,
+    setParameter,
 } from './live2d.js';
 
 const UPDATE_INTERVAL = 100;
@@ -277,7 +279,9 @@ jQuery(async () => {
     moduleWorker();
 
     // Events
-    window.addEventListener('resize', () => {loadLive2d(); console.debug(DEBUG_PREFIX,'Window resized, reloading live2d');});
+
+    // Comment this out for now due to multiple models showing up at once
+    //window.addEventListener('resize', () => {loadLive2d(); console.debug(DEBUG_PREFIX,'Window resized, reloading live2d');});
 
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersList);
     eventSource.on(event_types.CHAT_CHANGED, updateCharactersModels);
@@ -293,6 +297,8 @@ jQuery(async () => {
 
     registerSlashCommand('live2dexpression', setExpressionSlashCommand, [], '<span class="monospace">(character="characterName" motion="motionGroup_id=motionId")</span> – play live2d model motion (example: /live2dmotion character="Shizuku" motion="tap_body_id=0" /live2dmotion character="Aqua" motion="_id=1"', true, true);
     registerSlashCommand('live2dmotion', setMotionSlashCommand, [], '<span class="monospace">(character="characterName" expression="expressionName")</span> – play live2d model motion (example: /live2dexpression character="Shizuku" expression="f01" /live2dexpression character="Aqua" expression="Happy"', true, true);
+    registerSlashCommand('live2dparameter', setParameterSlashCommand, [], '<span class="monospace">(character="characterName" id="parameterId" value="parameterValue")</span> – change live2d model parameter (example: /live2dparameter character="Shizuku" id="ParamBrowLY" value=0', true, true)
+    registerSlashCommand('live2dresetparameters', resetParametersSlashCommand, [], '<span class="monospace">(character="characterName" id="parameterId" value="parameterValue")</span> – change live2d model parameter (example: /live2dparameter character="Shizuku" id="ParamBrowLY" value=0', true, true)
 
     console.debug(DEBUG_PREFIX,'Finish loaded.');
 
@@ -315,7 +321,7 @@ async function setExpressionSlashCommand(args) {
     const character = args['character'].trim();
     const expression = args['expression'].trim();
 
-    console.debug(DEBUG_PREFIX,'Command expression received for',character,expression);
+    console.debug(DEBUG_PREFIX, `Command expression received for ${character} ${expression}`);
 
     await playExpression(character, expression);
 }
@@ -337,7 +343,48 @@ async function setMotionSlashCommand(args) {
     const character = args['character'].trim();
     const motion = args['motion'].trim();
 
-    console.debug(DEBUG_PREFIX,'Command motion received for',character,motion);
+    console.debug(DEBUG_PREFIX, `Command motion received for ${character} ${motion}`);
 
     await playMotion(character, motion);
+}
+
+async function setParameterSlashCommand(args) {
+
+    // TODO: Default to the current character
+    if (args['character'] === undefined) {
+        console.log('No character provided');
+        return;
+    }
+
+    if (args['id'] === undefined) {
+        console.log('No parameter name provided');
+        return;
+    }
+
+    const character = args['character']?.trim();
+    const id = args['id'].trim();
+    const value = parseInt(args['value'].trim());
+
+    if (value === NaN) {
+        console.log(`The new value for parameter ${id} is not a number.`);
+        return;
+    }
+
+    console.debug(DEBUG_PREFIX, `Command parameter received for ${character}`);
+
+    await setParameter(character, id, value);
+}
+
+async function resetParametersSlashCommand(args) {
+    // TODO: Default to the current character
+    if (args['character'] === undefined) {
+        console.log('No character provided');
+        return;
+    }
+
+    const character = args['character'].trim();
+
+    console.debug(DEBUG_PREFIX, `Resetting all parameters for ${character}`);
+
+    await resetParameters(character);
 }
