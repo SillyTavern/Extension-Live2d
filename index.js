@@ -95,6 +95,7 @@ import {
     forceLoopAnimation,
     playMotion,
     playExpression,
+    setParameter,
 } from './live2d.js';
 
 const UPDATE_INTERVAL = 100;
@@ -293,6 +294,7 @@ jQuery(async () => {
 
     registerSlashCommand('live2dexpression', setExpressionSlashCommand, [], '<span class="monospace">(character="characterName" motion="motionGroup_id=motionId")</span> – play live2d model motion (example: /live2dmotion character="Shizuku" motion="tap_body_id=0" /live2dmotion character="Aqua" motion="_id=1"', true, true);
     registerSlashCommand('live2dmotion', setMotionSlashCommand, [], '<span class="monospace">(character="characterName" expression="expressionName")</span> – play live2d model motion (example: /live2dexpression character="Shizuku" expression="f01" /live2dexpression character="Aqua" expression="Happy"', true, true);
+    registerSlashCommand('live2dparameter', setParameterSlashCommand, [], '', true, true)
 
     console.debug(DEBUG_PREFIX,'Finish loaded.');
 
@@ -340,4 +342,31 @@ async function setMotionSlashCommand(args) {
     console.debug(DEBUG_PREFIX,'Command motion received for',character,motion);
 
     await playMotion(character, motion);
+}
+
+async function setParameterSlashCommand(args) {
+
+    // TODO: Default to the current character
+    if (args['character'] === undefined) {
+        console.log('No character provided');
+        return;
+    }
+
+    if (args['id'] === undefined) {
+        console.log('No parameter name provided');
+        return;
+    }
+
+    const character = args['character']?.trim();
+    const id = args['id'].trim();
+    const value = parseInt(args['value'].trim());
+
+    if (value === NaN) {
+        console.log(`The new value for parameter ${id} is not a number.`);
+        return;
+    }
+
+    console.debug(DEBUG_PREFIX,'Command parameter received for',character)
+
+    await setParameter(character, id, value);
 }

@@ -24,6 +24,7 @@ export {
     playMotion,
     playTalk,
     playMessage,
+    setParameter,
     setVisible,
     charactersWithModelLoaded,
     forceLoopAnimation,
@@ -608,6 +609,12 @@ async function playMessage(chat_id) {
 
     const message = getContext().chat[chat_id].mes;
     playTalk(character, message);
+}
+
+// Sets a parameter value using an ID
+async function setParameter(character, paramId, paramValue) {
+    const model = models[character];
+    model.internalModel.coreModel.setParameterValueById(paramId, paramValue);
 }
 
 function setVisible() {
